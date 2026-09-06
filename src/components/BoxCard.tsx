@@ -9,7 +9,8 @@ import {
   Edit2, 
   Trash2, 
   ChevronRight,
-  FolderOpen
+  FolderOpen,
+  FileText
 } from 'lucide-react';
 import type { StorageBox, InventoryItem, Room } from '../types';
 import { BarcodeRenderer } from './BarcodeRenderer';
@@ -22,6 +23,7 @@ interface BoxCardProps {
   onEditBox: (box: StorageBox) => void;
   onDeleteBox: (box: StorageBox) => void;
   onPrintBoxLabel: (box: StorageBox) => void;
+  onPrintBoxPackingSlip?: (box: StorageBox) => void;
   onAddItemToBox: (box: StorageBox) => void;
 }
 
@@ -33,6 +35,7 @@ export const BoxCard: React.FC<BoxCardProps> = ({
   onEditBox,
   onDeleteBox,
   onPrintBoxLabel,
+  onPrintBoxPackingSlip,
   onAddItemToBox
 }) => {
   const room = rooms.find((r) => r.id === box.roomId);
@@ -98,7 +101,7 @@ export const BoxCard: React.FC<BoxCardProps> = ({
           </span>
         </div>
 
-        {/* Barcode Snippet Preview */}
+        {/* Barcode Snippet Preview & Print Actions */}
         <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/60 rounded-2xl px-3.5 py-2">
           <div className="flex items-center gap-2">
             <QrCode className="w-4 h-4 text-slate-400 dark:text-slate-500" />
@@ -106,12 +109,23 @@ export const BoxCard: React.FC<BoxCardProps> = ({
               {box.barcode}
             </span>
           </div>
-          <button
-            onClick={() => onPrintBoxLabel(box)}
-            className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-semibold hover:underline flex items-center gap-1"
-          >
-            Label Placard
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onPrintBoxLabel(box)}
+              className="text-[11px] text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+              title="Print Box Barcode Placard Label"
+            >
+              <Printer className="w-3 h-3" /> Label
+            </button>
+            <span className="text-zinc-300 dark:text-zinc-600">|</span>
+            <button
+              onClick={() => onPrintBoxPackingSlip ? onPrintBoxPackingSlip(box) : onPrintBoxLabel(box)}
+              className="text-[11px] text-black dark:text-white font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+              title="Print Box Packing Slip & Inventory Sheet"
+            >
+              <FileText className="w-3 h-3" /> Packing Slip
+            </button>
+          </div>
         </div>
 
         {/* Items Preview Chips */}

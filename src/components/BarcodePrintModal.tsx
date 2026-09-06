@@ -14,7 +14,8 @@ import {
   Minimize2,
   Eye,
   Scissors,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Home
 } from 'lucide-react';
 import type { InventoryItem, StorageBox, Room } from '../types';
 import { BarcodeRenderer } from './BarcodeRenderer';
@@ -27,6 +28,8 @@ interface BarcodePrintModalProps {
   rooms: Room[];
   initialSelectedItem?: InventoryItem | null;
   initialSelectedBox?: StorageBox | null;
+  initialSelectedRoom?: Room | null;
+  initialPrintTarget?: 'item' | 'box' | 'box_items' | 'all_items' | 'box_sheet' | 'room_sheet';
 }
 
 export type LabelPreset = 
@@ -55,10 +58,12 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
   boxes,
   rooms,
   initialSelectedItem,
-  initialSelectedBox
+  initialSelectedBox,
+  initialSelectedRoom,
+  initialPrintTarget
 }) => {
-  const [printTarget, setPrintTarget] = useState<'item' | 'box' | 'box_items' | 'all_items' | 'box_sheet'>(
-    initialSelectedBox ? 'box' : initialSelectedItem ? 'item' : 'item'
+  const [printTarget, setPrintTarget] = useState<'item' | 'box' | 'box_items' | 'all_items' | 'box_sheet' | 'room_sheet'>(
+    initialPrintTarget || (initialSelectedRoom ? 'room_sheet' : initialSelectedBox ? 'box' : initialSelectedItem ? 'item' : 'item')
   );
   const [selectedItemId, setSelectedItemId] = useState<string>(
     initialSelectedItem?.id || (items[0]?.id ?? '')
@@ -76,13 +81,20 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
     return boxes.map((b) => b.id);
   });
   const [boxSearchQuery, setBoxSearchQuery] = useState<string>('');
+  const [selectedRoomId, setSelectedRoomId] = useState<string>(
+    initialSelectedRoom?.id || (rooms[0]?.id ?? '')
+  );
+  const [roomGroupByBox, setRoomGroupByBox] = useState<boolean>(true);
+  const [roomIncludeLoose, setRoomIncludeLoose] = useState<boolean>(true);
+  const [slipIncludePhotos, setSlipIncludePhotos] = useState<boolean>(true);
+  const [slipShowSignatures, setSlipShowSignatures] = useState<boolean>(true);
   const [labelSize, setLabelSize] = useState<LabelPreset>('avery_5150_sheet');
   const [sheetMode, setSheetMode] = useState<'fill_sheet' | 'custom_count'>('fill_sheet');
   const [copies, setCopies] = useState<number>(1);
   const [startPosition, setStartPosition] = useState<number>(1);
   const [showBorders, setShowBorders] = useState<boolean>(false);
   const [includePhotos, setIncludePhotos] = useState<boolean>(true);
-  const [monochromePhotos, setMonochromePhotos] = useState<boolean>(true);
+  const [monochromePhotos, setMonochromePhotos] = useState<boolean>(false);
 
   // Full page view, split layout, and zoom controls
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
@@ -115,25 +127,34 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
   // Sync state when modal opens or initial selection changes
   useEffect(() => {
     if (isOpen) {
-      if (initialSelectedBox) {
-        setPrintTarget('box');
+      if (initialPrintTarget) {
+        setPrintTarget(initialPrintTarget);
+      }
+      if (initialSelectedRoom) {
+        setSelectedRoomId(initialSelectedRoom.id);
+        if (!initialPrintTarget) setPrintTarget('room_sheet');
+      } else if (initialSelectedBox) {
+        setPrintTarget(initialPrintTarget || 'box');
         setSelectedBoxId(initialSelectedBox.id);
         setSelectedBoxIds([initialSelectedBox.id]);
       } else if (initialSelectedItem) {
-        setPrintTarget('item');
+        setPrintTarget(initialPrintTarget || 'item');
         setSelectedItemId(initialSelectedItem.id);
         setSelectedItemIds([initialSelectedItem.id]);
       }
     }
-  }, [isOpen, initialSelectedBox, initialSelectedItem]);
+  }, [isOpen, initialPrintTarget, initialSelectedRoom, initialSelectedBox, initialSelectedItem]);
 
-  // If selected item/box became invalid, fall back to first item/box
+  // If selected item/box/room became invalid, fall back to first item/box/room
   useEffect(() => {
     if (!items.find((i) => i.id === selectedItemId) && items.length > 0) {
       setSelectedItemId(items[0].id);
     }
     if (!boxes.find((b) => b.id === selectedBoxId) && boxes.length > 0) {
       setSelectedBoxId(boxes[0].id);
+    }
+    if (!rooms.find((r) => r.id === selectedRoomId) && rooms.length > 0) {
+      setSelectedRoomId(rooms[0].id);
     }
     setSelectedItemIds((prev) => {
       const valid = prev.filter((id) => items.some((i) => i.id === id));
@@ -149,10 +170,21 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
       }
       return valid;
     });
-  }, [items, boxes, selectedItemId, selectedBoxId, initialSelectedItem, initialSelectedBox]);
+  }, [items, boxes, rooms, selectedItemId, selectedBoxId, selectedRoomId, initialSelectedItem, initialSelectedBox, initialSelectedRoom]);
 
   const currentItem = items.find((i) => i.id === selectedItemId);
   const currentBox = boxes.find((b) => b.id === selectedBoxId);
+  const currentRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
+
+  const roomItems = useMemo(() => {
+    if (!currentRoom) return [];
+    return items.filter((i) => i.roomId === currentRoom.id);
+  }, [items, currentRoom]);
+
+  const roomBoxes = useMemo(() => {
+    if (!currentRoom) return [];
+    return boxes.filter((b) => b.roomId === currentRoom.id);
+  }, [boxes, currentRoom]);
 
   const getRoomName = (roomId: string) => {
     return rooms.find((r) => r.id === roomId)?.name || 'Unassigned Room';
@@ -372,7 +404,7 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
 
   // Determine total label count for preview status
   const totalLabelsToPrint = (() => {
-    if (printTarget === 'box_sheet') return 1;
+    if (printTarget === 'box_sheet' || printTarget === 'room_sheet') return 1;
     if (labelSize === 'avery_5150_sheet') return averyLabelsList.filter(Boolean).length;
     if (printTarget === 'item') {
       if (targetItems.length === 1 && sheetMode === 'fill_sheet') return 30;
@@ -404,7 +436,7 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
   })();
 
   const effectiveZoom = (() => {
-    if (labelSize !== 'avery_5150_sheet' && printTarget !== 'box_sheet') {
+    if (labelSize !== 'avery_5150_sheet' && printTarget !== 'box_sheet' && printTarget !== 'room_sheet') {
       return zoomMode === 'custom' ? customZoom : 1.0;
     }
     if (zoomMode === 'fit_page') return fitPageZoom;
@@ -451,14 +483,26 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h2 className="text-sm sm:text-base font-bold text-black dark:text-white truncate">
-                  Print Visual Barcode Labels
+                  {printTarget === 'room_sheet'
+                    ? 'Print Room Packing Slip'
+                    : printTarget === 'box_sheet'
+                    ? 'Print Storage Box Packing Slip'
+                    : 'Print Visual Barcode Labels'}
                 </h2>
                 <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-200 dark:bg-zinc-800 text-black dark:text-zinc-200">
-                  {totalLabelsToPrint} label{totalLabelsToPrint !== 1 ? 's' : ''} ready
+                  {printTarget === 'room_sheet'
+                    ? `Room: ${currentRoom?.name || 'Selected'} (${roomItems.length} items)`
+                    : printTarget === 'box_sheet'
+                    ? `Box: ${currentBox?.boxCode || 'Selected'}`
+                    : `${totalLabelsToPrint} label${totalLabelsToPrint !== 1 ? 's' : ''} ready`}
                 </span>
               </div>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
-                Avery 5150 / 5160 (1&quot; × 2⅝&quot; • 30/sheet) & standard label templates
+                {printTarget === 'room_sheet'
+                  ? 'Complete room inventory manifest with storage boxes, loose items, and inspection sign-off'
+                  : printTarget === 'box_sheet'
+                  ? 'Detailed box contents manifest with barcodes and placement details'
+                  : 'Avery 5150 / 5160 (1" × 2⅝" • 30/sheet) & standard label templates'}
               </p>
             </div>
           </div>
@@ -471,7 +515,9 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
               title="Print Now"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Print Labels</span>
+              <span className="hidden sm:inline">
+                {printTarget === 'box_sheet' || printTarget === 'room_sheet' ? 'Print Slip' : 'Print Labels'}
+              </span>
             </button>
             <button
               type="button"
@@ -502,10 +548,10 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
             <div className="overflow-y-auto flex-1 p-4 sm:p-5 space-y-4">
               
               {/* Target Selector */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-1.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-1.5">
                 <button
                   onClick={() => setPrintTarget('item')}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     printTarget === 'item'
                       ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-xs'
                       : 'bg-white dark:bg-zinc-850 text-zinc-800 dark:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800'
@@ -527,7 +573,7 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
                       setSelectedBoxIds(boxes.map((b) => b.id));
                     }
                   }}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     printTarget === 'box'
                       ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-xs'
                       : 'bg-white dark:bg-zinc-850 text-zinc-800 dark:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800'
@@ -548,7 +594,7 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
                       setSelectedItemIds(boxItemIds);
                     }
                   }}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     printTarget === 'box_items'
                       ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-xs'
                       : 'bg-white dark:bg-zinc-850 text-zinc-800 dark:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800'
@@ -566,7 +612,7 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
                     setPrintTarget('all_items');
                     setSelectedItemIds(items.map((i) => i.id));
                   }}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     printTarget === 'all_items'
                       ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-xs'
                       : 'bg-white dark:bg-zinc-850 text-zinc-800 dark:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800'
@@ -581,15 +627,202 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
                 </button>
                 <button
                   onClick={() => setPrintTarget('box_sheet')}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold border transition-all col-span-2 sm:col-span-1 cursor-pointer ${
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     printTarget === 'box_sheet'
                       ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-xs'
                       : 'bg-white dark:bg-zinc-850 text-zinc-800 dark:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                   }`}
                 >
-                  <FileText className="w-3.5 h-3.5" /> Packing Slip
+                  <FileText className="w-3.5 h-3.5" /> Box Slip
+                </button>
+                <button
+                  onClick={() => setPrintTarget('room_sheet')}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                    printTarget === 'room_sheet'
+                      ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-xs'
+                      : 'bg-white dark:bg-zinc-850 text-zinc-800 dark:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  <Home className="w-3.5 h-3.5" /> Room Slip
                 </button>
               </div>
+
+              {/* Dedicated Packing Slip Configuration Panel */}
+              {(printTarget === 'box_sheet' || printTarget === 'room_sheet') && (
+                <div className="bg-zinc-50 dark:bg-zinc-850/80 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700/80 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-black dark:text-white" />
+                      <span className="text-xs font-bold text-black dark:text-white">
+                        Packing Slip Manifest Format
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200">
+                      8.5&quot; × 11&quot; Full Page
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-1.5 p-1 bg-zinc-200/80 dark:bg-zinc-800 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setPrintTarget('box_sheet')}
+                      className={`flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        printTarget === 'box_sheet'
+                          ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs'
+                          : 'text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                      }`}
+                    >
+                      <Box className="w-3.5 h-3.5" />
+                      <span>Box Packing Slip</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPrintTarget('room_sheet')}
+                      className={`flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        printTarget === 'room_sheet'
+                          ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs'
+                          : 'text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                      }`}
+                    >
+                      <Home className="w-3.5 h-3.5" />
+                      <span>Room Packing Slip</span>
+                    </button>
+                  </div>
+
+                  {/* Storage Box Packing Slip Settings */}
+                  {printTarget === 'box_sheet' && (
+                    <div className="flex flex-col gap-2.5 pt-1">
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                          Select Storage Box
+                        </label>
+                        <select
+                          value={selectedBoxId}
+                          onChange={(e) => setSelectedBoxId(e.target.value)}
+                          className="w-full text-xs py-2 px-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-black dark:text-white font-medium"
+                        >
+                          {boxes.map((box) => (
+                            <option key={box.id} value={box.id}>
+                              {box.boxCode} — {box.name} ({getRoomName(box.roomId)})
+                            </option>
+                          ))}
+                          {boxes.length === 0 && <option value="">No boxes available</option>}
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-zinc-200 dark:border-zinc-700/60">
+                        <label className="flex items-center gap-2 text-xs text-zinc-800 dark:text-zinc-200 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={slipIncludePhotos}
+                            onChange={(e) => setSlipIncludePhotos(e.target.checked)}
+                            className="rounded accent-black dark:accent-white w-3.5 h-3.5"
+                          />
+                          <span>Include item photos</span>
+                        </label>
+                        <label className="flex items-center gap-2 text-xs text-zinc-800 dark:text-zinc-200 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={slipShowSignatures}
+                            onChange={(e) => setSlipShowSignatures(e.target.checked)}
+                            className="rounded accent-black dark:accent-white w-3.5 h-3.5"
+                          />
+                          <span>Include sign-off block</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Room Packing Slip Settings */}
+                  {printTarget === 'room_sheet' && (
+                    <div className="flex flex-col gap-3 pt-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                            Select Household Room
+                          </label>
+                          <select
+                            value={selectedRoomId}
+                            onChange={(e) => setSelectedRoomId(e.target.value)}
+                            className="w-full text-xs py-2 px-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-black dark:text-white font-medium"
+                          >
+                            {rooms.map((room) => {
+                              const count = items.filter((i) => i.roomId === room.id).length;
+                              const bCount = boxes.filter((b) => b.roomId === room.id).length;
+                              return (
+                                <option key={room.id} value={room.id}>
+                                  {room.name} {room.floor ? `(${room.floor})` : ''} — {bCount} boxes, {count} items
+                                </option>
+                              );
+                            })}
+                            {rooms.length === 0 && <option value="">No rooms available</option>}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                            Items Arrangement
+                          </label>
+                          <div className="flex gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setRoomGroupByBox(true)}
+                              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                                roomGroupByBox
+                                  ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-2xs'
+                                  : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100'
+                              }`}
+                            >
+                              Group by Box
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setRoomGroupByBox(false)}
+                              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                                !roomGroupByBox
+                                  ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-2xs'
+                                  : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100'
+                              }`}
+                            >
+                              Single List
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-zinc-200 dark:border-zinc-700/60">
+                        <label className="flex items-center gap-1.5 text-xs text-zinc-800 dark:text-zinc-200 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={roomIncludeLoose}
+                            onChange={(e) => setRoomIncludeLoose(e.target.checked)}
+                            className="rounded accent-black dark:accent-white w-3.5 h-3.5"
+                          />
+                          <span>Loose unboxed items</span>
+                        </label>
+                        <label className="flex items-center gap-1.5 text-xs text-zinc-800 dark:text-zinc-200 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={slipIncludePhotos}
+                            onChange={(e) => setSlipIncludePhotos(e.target.checked)}
+                            className="rounded accent-black dark:accent-white w-3.5 h-3.5"
+                          />
+                          <span>Photo thumbnails</span>
+                        </label>
+                        <label className="flex items-center gap-1.5 text-xs text-zinc-800 dark:text-zinc-200 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={slipShowSignatures}
+                            onChange={(e) => setSlipShowSignatures(e.target.checked)}
+                            className="rounded accent-black dark:accent-white w-3.5 h-3.5"
+                          />
+                          <span>Sign-off block</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
           {/* Inventory Items Multi-Selector (when printing items: 'item', 'box_items', or 'all_items') */}
           {(printTarget === 'item' || printTarget === 'box_items' || printTarget === 'all_items') && (
@@ -815,39 +1048,39 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
             </div>
           )}
 
-          {/* Selectors & Preset Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {(printTarget === 'box_items' || printTarget === 'box_sheet') && (
-              <div>
-                <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Select Storage Box</label>
-                <select
-                  value={selectedBoxId}
-                  onChange={(e) => setSelectedBoxId(e.target.value)}
-                  className="w-full text-xs py-2 px-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white focus:bg-white dark:focus:bg-zinc-900"
-                >
-                  {boxes.map((box) => (
-                    <option key={box.id} value={box.id}>
-                      {box.boxCode} — {box.name} ({getRoomName(box.roomId)})
-                    </option>
-                  ))}
-                  {boxes.length === 0 && (
-                    <option value="">No boxes available</option>
-                  )}
-                </select>
-              </div>
-            )}
-
-            {printTarget === 'all_items' && (
-              <div>
-                <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Catalog Scope</label>
-                <div className="text-xs py-2 px-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-black dark:text-white font-medium">
-                  All Items in Inventory ({items.length} items)
+          {/* Selectors & Preset Row for label printing */}
+          {printTarget !== 'box_sheet' && printTarget !== 'room_sheet' && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {printTarget === 'box_items' && (
+                <div>
+                  <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Select Storage Box</label>
+                  <select
+                    value={selectedBoxId}
+                    onChange={(e) => setSelectedBoxId(e.target.value)}
+                    className="w-full text-xs py-2 px-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white focus:bg-white dark:focus:bg-zinc-900"
+                  >
+                    {boxes.map((box) => (
+                      <option key={box.id} value={box.id}>
+                        {box.boxCode} — {box.name} ({getRoomName(box.roomId)})
+                      </option>
+                    ))}
+                    {boxes.length === 0 && (
+                      <option value="">No boxes available</option>
+                    )}
+                  </select>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Label Template Preset */}
-            {printTarget !== 'box_sheet' && (
+              {printTarget === 'all_items' && (
+                <div>
+                  <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Catalog Scope</label>
+                  <div className="text-xs py-2 px-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-black dark:text-white font-medium">
+                    All Items in Inventory ({items.length} items)
+                  </div>
+                </div>
+              )}
+
+              {/* Label Template Preset */}
               <div className={printTarget === 'box' || printTarget === 'item' ? 'sm:col-span-1' : ''}>
                 <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Template Preset</label>
                 <select
@@ -862,170 +1095,170 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
                   <option value="tote">Large Bin Placard (4.0&quot; × 2.5&quot; - With Photo)</option>
                 </select>
               </div>
-            )}
 
-            {/* Avery Sheet Options: Sheet Mode & Start Position */}
-            {labelSize === 'avery_5150_sheet' && printTarget !== 'box_sheet' && (
-              <div className={`flex items-center gap-3 ${printTarget === 'box' || printTarget === 'item' ? 'sm:col-span-2' : ''}`}>
-                {printTarget === 'item' ? (
-                  <div className="flex-1">
-                    <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                      {targetItems.length <= 1 ? 'Fill Quantity' : 'Copies per Item'}
-                    </label>
-                    {targetItems.length <= 1 ? (
-                      <div className="flex gap-2">
-                        <select
-                          value={sheetMode}
-                          onChange={(e) => setSheetMode(e.target.value as 'fill_sheet' | 'custom_count')}
-                          className="w-full text-xs py-2 px-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white"
-                        >
-                          <option value="fill_sheet">Full Sheet (30 labels of this item)</option>
-                          <option value="custom_count">Custom Count...</option>
-                        </select>
-                        {sheetMode === 'custom_count' && (
+              {/* Avery Sheet Options: Sheet Mode & Start Position */}
+              {labelSize === 'avery_5150_sheet' && (
+                <div className={`flex items-center gap-3 ${printTarget === 'box' || printTarget === 'item' ? 'sm:col-span-2' : ''}`}>
+                  {printTarget === 'item' ? (
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                        {targetItems.length <= 1 ? 'Fill Quantity' : 'Copies per Item'}
+                      </label>
+                      {targetItems.length <= 1 ? (
+                        <div className="flex gap-2">
+                          <select
+                            value={sheetMode}
+                            onChange={(e) => setSheetMode(e.target.value as 'fill_sheet' | 'custom_count')}
+                            className="w-full text-xs py-2 px-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white"
+                          >
+                            <option value="fill_sheet">Full Sheet (30 labels of this item)</option>
+                            <option value="custom_count">Custom Count...</option>
+                          </select>
+                          {sheetMode === 'custom_count' && (
+                            <input
+                              type="number"
+                              min="1"
+                              max="120"
+                              value={copies}
+                              onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
+                              className="w-16 text-xs py-2 px-2 border border-zinc-300 dark:border-zinc-700 rounded-lg text-center bg-white dark:bg-zinc-800 text-black dark:text-white"
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
                           <input
                             type="number"
                             min="1"
-                            max="120"
+                            max="10"
                             value={copies}
                             onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
-                            className="w-16 text-xs py-2 px-2 border border-zinc-300 dark:border-zinc-700 rounded-lg text-center bg-white dark:bg-zinc-800 text-black dark:text-white"
+                            className="w-20 text-xs py-2 px-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white font-semibold text-center"
                           />
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          min="1"
-                          max="10"
-                          value={copies}
-                          onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
-                          className="w-20 text-xs py-2 px-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white font-semibold text-center"
-                        />
-                        <span className="text-[11px] text-zinc-500">
-                          {targetItems.length} items × {copies} = {targetItems.length * copies} labels total
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ) : printTarget === 'box' ? (
-                  <div className="flex-1">
-                    <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                      {targetBoxes.length <= 1 ? 'Fill Quantity' : 'Copies per Box'}
-                    </label>
-                    {targetBoxes.length <= 1 ? (
-                      <div className="flex gap-2">
-                        <select
-                          value={sheetMode}
-                          onChange={(e) => setSheetMode(e.target.value as 'fill_sheet' | 'custom_count')}
-                          className="w-full text-xs py-2 px-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white"
-                        >
-                          <option value="fill_sheet">Full Sheet (30 labels of this box)</option>
-                          <option value="custom_count">Custom Count...</option>
-                        </select>
-                        {sheetMode === 'custom_count' && (
+                          <span className="text-[11px] text-zinc-500">
+                            {targetItems.length} items × {copies} = {targetItems.length * copies} labels total
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ) : printTarget === 'box' ? (
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                        {targetBoxes.length <= 1 ? 'Fill Quantity' : 'Copies per Box'}
+                      </label>
+                      {targetBoxes.length <= 1 ? (
+                        <div className="flex gap-2">
+                          <select
+                            value={sheetMode}
+                            onChange={(e) => setSheetMode(e.target.value as 'fill_sheet' | 'custom_count')}
+                            className="w-full text-xs py-2 px-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white"
+                          >
+                            <option value="fill_sheet">Full Sheet (30 labels of this box)</option>
+                            <option value="custom_count">Custom Count...</option>
+                          </select>
+                          {sheetMode === 'custom_count' && (
+                            <input
+                              type="number"
+                              min="1"
+                              max="120"
+                              value={copies}
+                              onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
+                              className="w-16 text-xs py-2 px-2 border border-zinc-300 dark:border-zinc-700 rounded-lg text-center bg-white dark:bg-zinc-800 text-black dark:text-white"
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
                           <input
                             type="number"
                             min="1"
-                            max="120"
+                            max="10"
                             value={copies}
                             onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
-                            className="w-16 text-xs py-2 px-2 border border-zinc-300 dark:border-zinc-700 rounded-lg text-center bg-white dark:bg-zinc-800 text-black dark:text-white"
+                            className="w-20 text-xs py-2 px-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white font-semibold text-center"
                           />
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          min="1"
-                          max="10"
-                          value={copies}
-                          onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
-                          className="w-20 text-xs py-2 px-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white font-semibold text-center"
-                        />
-                        <span className="text-[11px] text-zinc-500">
-                          {targetBoxes.length} boxes × {copies} = {targetBoxes.length * copies} labels total
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex-1">
-                    <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Copies per Item</label>
+                          <span className="text-[11px] text-zinc-500">
+                            {targetBoxes.length} boxes × {copies} = {targetBoxes.length * copies} labels total
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Copies per Item</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={copies}
+                        onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-full text-xs py-2 px-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white font-semibold"
+                      />
+                    </div>
+                  )}
+
+                  <div className="w-28">
+                    <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1" title="Skip already peeled labels on your Avery sheet">
+                      Start at Slot
+                    </label>
                     <input
                       type="number"
                       min="1"
-                      max="10"
-                      value={copies}
-                      onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-full text-xs py-2 px-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white font-semibold"
+                      max="30"
+                      value={startPosition}
+                      onChange={(e) => setStartPosition(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+                      className="w-full text-xs py-2 px-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white text-center font-bold"
                     />
                   </div>
-                )}
+                </div>
+              )}
 
-                <div className="w-28">
-                  <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1" title="Skip already peeled labels on your Avery sheet">
-                    Start at Slot
+              {/* Non-sheet copies counter */}
+              {labelSize !== 'avery_5150_sheet' && (
+                <div className={printTarget === 'box' || printTarget === 'item' ? 'sm:col-span-2' : ''}>
+                  <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                    {printTarget === 'box'
+                      ? targetBoxes.length > 1
+                        ? 'Copies per Box'
+                        : 'Print Copies'
+                      : printTarget === 'item'
+                      ? targetItems.length > 1
+                        ? 'Copies per Item'
+                        : 'Print Copies'
+                      : 'Copies per Item'}
                   </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="30"
-                    value={startPosition}
-                    onChange={(e) => setStartPosition(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
-                    className="w-full text-xs py-2 px-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white text-center font-bold"
-                  />
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min="1"
+                      max={
+                        (printTarget === 'item' && targetItems.length <= 1) ||
+                        (printTarget === 'box' && targetBoxes.length <= 1)
+                          ? 50
+                          : 10
+                      }
+                      value={copies}
+                      onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-24 text-xs py-2 px-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white font-semibold"
+                    />
+                    {printTarget === 'box' && targetBoxes.length > 1 && (
+                      <span className="text-[11px] text-zinc-500">
+                        {targetBoxes.length} boxes × {copies} = {targetBoxes.length * copies} labels to print
+                      </span>
+                    )}
+                    {printTarget === 'item' && targetItems.length > 1 && (
+                      <span className="text-[11px] text-zinc-500">
+                        {targetItems.length} items × {copies} = {targetItems.length * copies} labels to print
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+          )}
 
-            {/* Non-sheet copies counter */}
-            {labelSize !== 'avery_5150_sheet' && printTarget !== 'box_sheet' && (
-              <div className={printTarget === 'box' || printTarget === 'item' ? 'sm:col-span-2' : ''}>
-                <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                  {printTarget === 'box'
-                    ? targetBoxes.length > 1
-                      ? 'Copies per Box'
-                      : 'Print Copies'
-                    : printTarget === 'item'
-                    ? targetItems.length > 1
-                      ? 'Copies per Item'
-                      : 'Print Copies'
-                    : 'Copies per Item'}
-                </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="number"
-                    min="1"
-                    max={
-                      (printTarget === 'item' && targetItems.length <= 1) ||
-                      (printTarget === 'box' && targetBoxes.length <= 1)
-                        ? 50
-                        : 10
-                    }
-                    value={copies}
-                    onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-24 text-xs py-2 px-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white font-semibold"
-                  />
-                  {printTarget === 'box' && targetBoxes.length > 1 && (
-                    <span className="text-[11px] text-zinc-500">
-                      {targetBoxes.length} boxes × {copies} = {targetBoxes.length * copies} labels to print
-                    </span>
-                  )}
-                  {printTarget === 'item' && targetItems.length > 1 && (
-                    <span className="text-[11px] text-zinc-500">
-                      {targetItems.length} items × {copies} = {targetItems.length * copies} labels to print
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Photo & High Contrast Formatting Options */}
-          {printTarget !== 'box_sheet' && (
+          {/* Photo & High Contrast Formatting Options for Labels */}
+          {printTarget !== 'box_sheet' && printTarget !== 'room_sheet' && (
             <div className="p-3 bg-zinc-50 dark:bg-zinc-850/80 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-xs space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 font-bold text-black dark:text-white">
@@ -1059,7 +1292,7 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
           )}
 
           {/* Avery Sheet Banner & Cutting Guides Toggle */}
-          {labelSize === 'avery_5150_sheet' && printTarget !== 'box_sheet' && (
+          {labelSize === 'avery_5150_sheet' && printTarget !== 'box_sheet' && printTarget !== 'room_sheet' && (
             <div className="px-3.5 py-2.5 bg-zinc-100 dark:bg-zinc-850 border border-zinc-200 dark:border-zinc-700 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-zinc-900 dark:text-zinc-100">
               <div className="flex items-center gap-2">
                 <span className="text-sm">📄</span>
@@ -1105,7 +1338,11 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
             className="px-4 py-2 bg-black hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Print Labels ({totalLabelsToPrint})</span>
+            <span>
+              {printTarget === 'box_sheet' || printTarget === 'room_sheet'
+                ? 'Print Packing Slip'
+                : `Print Labels (${totalLabelsToPrint})`}
+            </span>
           </button>
         </div>
       </div>
@@ -1118,10 +1355,20 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
           <div className="flex items-center gap-2 min-w-0">
             <Eye className="w-4 h-4 text-black dark:text-white shrink-0" />
             <span className="font-bold text-black dark:text-white truncate">
-              {labelSize === 'avery_5150_sheet' && printTarget !== 'box_sheet' ? 'Full Page Sheet Preview' : 'Label Print Preview'}
+              {printTarget === 'room_sheet'
+                ? 'Room Packing Slip Preview'
+                : printTarget === 'box_sheet'
+                ? 'Storage Box Packing Slip'
+                : labelSize === 'avery_5150_sheet'
+                ? 'Full Page Sheet Preview'
+                : 'Label Print Preview'}
             </span>
             <span className="text-[11px] px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-black dark:text-zinc-200 font-medium truncate">
-              {labelSize === 'avery_5150_sheet' && printTarget !== 'box_sheet'
+              {printTarget === 'room_sheet'
+                ? `${currentRoom?.name || 'Room'} • ${roomItems.length} Items • ${roomBoxes.length} Boxes`
+                : printTarget === 'box_sheet'
+                ? `${currentBox?.boxCode || 'Box'} • ${items.filter((i) => i.boxId === currentBox?.id).length} Items`
+                : labelSize === 'avery_5150_sheet'
                 ? `${averySheets.length} Sheet${averySheets.length !== 1 ? 's' : ''} • ${averyLabelsList.filter(Boolean).length} Labels`
                 : `${totalLabelsToPrint} Label${totalLabelsToPrint !== 1 ? 's' : ''}`}
             </span>
@@ -1393,7 +1640,10 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
                                 {label.protocols && label.protocols.length > 0 && (
                                   <div className="flex flex-wrap gap-0.5 mt-0.5">
                                     {label.protocols.slice(0, 1).map((p) => (
-                                      <span key={p} className="text-[6px] font-bold uppercase px-0.8 py-0.1 border border-zinc-400 rounded-xs bg-zinc-100 text-zinc-800">
+                                      <span
+                                        key={p}
+                                        className={`text-[6px] font-bold uppercase px-0.8 py-0.1 border rounded-xs ${getLabelProtocolBadgeStyle(p, monochromePhotos)}`}
+                                      >
                                         {p}
                                       </span>
                                     ))}
@@ -1403,19 +1653,11 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
 
                               {/* Right: Item Image (if enabled and present) */}
                               {hasImage && (
-                                <div className="shrink-0 w-[0.52in] h-[0.78in] ml-0.5 flex items-center justify-center border border-zinc-300 rounded bg-white p-0.5 overflow-hidden">
-                                  <img
+                                <div className="shrink-0 w-[0.52in] h-[0.78in] ml-0.5 flex items-center justify-center border border-zinc-200 rounded bg-white p-0.5 overflow-hidden">
+                                  <PrintLabelImage
                                     src={label.imageUrl}
-                                    alt={label.title}
-                                    referrerPolicy="no-referrer"
-                                    className={`w-full h-full object-contain ${monochromePhotos ? 'grayscale contrast-125' : ''}`}
-                                    onError={(e) => {
-                                      const target = e.currentTarget;
-                                      if (!target.dataset.triedProxy && label.imageUrl) {
-                                        target.dataset.triedProxy = 'true';
-                                        target.src = `/api/proxy-image?url=${encodeURIComponent(label.imageUrl)}`;
-                                      }
-                                    }}
+                                    name={label.title}
+                                    monochrome={monochromePhotos}
                                   />
                                 </div>
                               )}
@@ -1546,39 +1788,83 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
               </div>
             )}
 
-            {/* 5. BOX INVENTORY PACKING SLIP */}
+            {/* 5. STORAGE BOX INVENTORY PACKING SLIP */}
             {printTarget === 'box_sheet' && currentBox && (
-              <div className="print-packing-slip w-full max-w-3xl bg-white border border-black rounded-xl p-6 text-black shadow-xs print:border-none print:p-0 print:max-w-none">
-                <div className="border-b-2 border-black pb-4 mb-4 flex justify-between items-start">
-                  <div>
-                    <span className="font-mono text-xs font-bold px-2 py-0.5 bg-black text-white rounded">
-                      {currentBox.boxCode}
-                    </span>
-                    <h1 className="text-xl font-bold mt-1 text-black">{currentBox.name}</h1>
-                    <p className="text-xs text-zinc-700 mt-0.5">
-                      Room: <strong>{getRoomName(currentBox.roomId)}</strong> | Location: <strong>{currentBox.location}</strong>
-                    </p>
+              <div className="print-packing-slip w-full max-w-4xl bg-white border border-black rounded-xl p-6 sm:p-8 text-black shadow-xs print:border-none print:p-0 print:max-w-none">
+                {/* Slip Header */}
+                <div className="border-b-2 border-black pb-4 mb-4 flex flex-col sm:flex-row justify-between items-start gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold px-2.5 py-0.5 bg-black text-white rounded">
+                        BOX MANIFEST
+                      </span>
+                      <span className="font-mono text-xs font-bold px-2 py-0.5 border border-black rounded">
+                        {currentBox.boxCode}
+                      </span>
+                    </div>
+                    <h1 className="text-2xl font-black mt-1.5 text-black tracking-tight">{currentBox.name}</h1>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-700 mt-1">
+                      <span>Room: <strong className="text-black">{getRoomName(currentBox.roomId)}</strong></span>
+                      <span>•</span>
+                      <span>Location: <strong className="text-black">{currentBox.location}</strong></span>
+                      {currentBox.description && (
+                        <>
+                          <span>•</span>
+                          <span className="text-zinc-600 italic">{currentBox.description}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex flex-col items-end shrink-0">
                     <BarcodeRenderer
                       value={currentBox.barcode || currentBox.boxCode}
-                      width={1.4}
-                      height={36}
+                      width={1.5}
+                      height={40}
                       fontSize={11}
                       displayValue={true}
                       lineColor="#000000"
                     />
+                    <span className="text-[10px] text-zinc-500 font-mono mt-1">
+                      Generated {new Date().toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
 
-                <h3 className="text-xs font-bold uppercase tracking-wider text-black mb-2">
-                  Items Packed Inside ({items.filter((i) => i.boxId === currentBox.id).length}):
+                {/* Box Metrics Bar */}
+                <div className="grid grid-cols-3 gap-2 p-2.5 bg-zinc-100 border border-zinc-300 rounded-lg mb-4 text-center text-xs">
+                  <div>
+                    <span className="text-zinc-600 block text-[10px] uppercase font-bold tracking-wider">Item Entries</span>
+                    <span className="text-base font-black text-black">
+                      {items.filter((i) => i.boxId === currentBox.id).length}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-600 block text-[10px] uppercase font-bold tracking-wider">Total Quantity</span>
+                    <span className="text-base font-black text-black">
+                      {items
+                        .filter((i) => i.boxId === currentBox.id)
+                        .reduce((sum, item) => sum + (item.quantity || 1), 0)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-600 block text-[10px] uppercase font-bold tracking-wider">Box Barcode</span>
+                    <span className="text-xs font-mono font-bold text-black mt-0.5 block">
+                      {currentBox.barcode || currentBox.boxCode}
+                    </span>
+                  </div>
+                </div>
+
+                <h3 className="text-xs font-bold uppercase tracking-wider text-black mb-2 flex items-center justify-between">
+                  <span>Items Packed Inside ({items.filter((i) => i.boxId === currentBox.id).length} items):</span>
+                  <span className="text-[10px] font-normal text-zinc-600">Tick checkmarks during packing or audit</span>
                 </h3>
 
                 <table className="w-full text-xs text-left border-collapse">
                   <thead>
                     <tr className="border-b-2 border-black bg-zinc-100 text-black font-semibold">
+                      <th className="py-2 px-2 w-8 text-center">✓</th>
                       <th className="py-2 px-2">Barcode</th>
+                      {slipIncludePhotos && <th className="py-2 px-2 w-12 text-center">Photo</th>}
                       <th className="py-2 px-2">Item Name & Brand</th>
                       <th className="py-2 px-2">Category</th>
                       <th className="py-2 px-2">Protocol</th>
@@ -1590,27 +1876,498 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
                     {items
                       .filter((item) => item.boxId === currentBox.id)
                       .map((item) => (
-                        <tr key={item.id} className="border-b border-zinc-200">
-                          <td className="py-2 px-2 font-mono font-bold text-black">{item.barcode}</td>
+                        <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50">
+                          <td className="py-2 px-2 text-center">
+                            <div className="w-3.5 h-3.5 border border-black rounded-xs mx-auto" />
+                          </td>
+                          <td className="py-2 px-2 font-mono font-bold text-black whitespace-nowrap">
+                            {item.barcode}
+                          </td>
+                          {slipIncludePhotos && (
+                            <td className="py-2 px-2 text-center">
+                              <div className="w-8 h-8 rounded border border-zinc-200 overflow-hidden mx-auto bg-zinc-50 flex items-center justify-center">
+                                <PrintLabelImage
+                                  src={item.imageUrl}
+                                  name={item.name}
+                                  monochrome={monochromePhotos}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            </td>
+                          )}
                           <td className="py-2 px-2">
-                            <div className="font-semibold text-black">{item.name}</div>
-                            <div className="text-[10px] text-zinc-600">{item.brand} {item.modelNumber && `• ${item.modelNumber}`}</div>
+                            <div className="font-semibold text-black leading-tight">{item.name}</div>
+                            <div className="text-[10px] text-zinc-600">
+                              {item.brand} {item.modelNumber && `• ${item.modelNumber}`}
+                              {item.serialNumber && ` • S/N: ${item.serialNumber}`}
+                            </div>
                           </td>
                           <td className="py-2 px-2 text-zinc-800">{item.category}</td>
-                          <td className="py-2 px-2">{item.protocol || '—'}</td>
-                          <td className="py-2 px-2 text-center font-semibold">{item.quantity}</td>
+                          <td className="py-2 px-2">
+                            {getProtocols(item).length > 0 ? (
+                              <span className="font-semibold">{getProtocols(item).join(', ')}</span>
+                            ) : (
+                              item.protocol || '—'
+                            )}
+                          </td>
+                          <td className="py-2 px-2 text-center font-bold text-black">{item.quantity}</td>
                           <td className="py-2 px-2 capitalize text-zinc-800">{item.status.replace('_', ' ')}</td>
                         </tr>
                       ))}
                     {items.filter((i) => i.boxId === currentBox.id).length === 0 && (
                       <tr>
-                        <td colSpan={6} className="py-6 text-center text-zinc-500 italic">
+                        <td colSpan={slipIncludePhotos ? 8 : 7} className="py-8 text-center text-zinc-500 italic">
                           No items are currently packed in this storage box.
                         </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
+
+                {/* Sign-off Block */}
+                {slipShowSignatures && (
+                  <div className="mt-8 pt-4 border-t-2 border-black grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs print-packing-slip-section">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-zinc-600 block mb-3">Packed / Verified By</span>
+                      <div className="border-b border-black pb-1">
+                        <span className="text-zinc-400 text-[11px]">Print Name</span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-zinc-600 block mb-3">Signature & Date</span>
+                      <div className="border-b border-black pb-1">
+                        <span className="text-zinc-400 text-[11px]">Date: __________________</span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-zinc-600 block mb-3">Audit Notes</span>
+                      <div className="border-b border-black pb-1">
+                        <span className="text-zinc-400 text-[11px]">Box condition / seal status</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 6. ROOM INVENTORY PACKING SLIP (NEW) */}
+            {printTarget === 'room_sheet' && currentRoom && (
+              <div className="print-packing-slip w-full max-w-4xl bg-white border border-black rounded-xl p-6 sm:p-8 text-black shadow-xs print:border-none print:p-0 print:max-w-none">
+                {/* Room Manifest Header */}
+                <div className="border-b-2 border-black pb-4 mb-4 flex flex-col sm:flex-row justify-between items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold px-2.5 py-0.5 bg-black text-white rounded">
+                        ROOM MANIFEST
+                      </span>
+                      {currentRoom.floor && (
+                        <span className="font-mono text-xs font-bold px-2 py-0.5 border border-black rounded">
+                          {currentRoom.floor}
+                        </span>
+                      )}
+                    </div>
+                    <h1 className="text-2xl font-black mt-1.5 text-black tracking-tight">{currentRoom.name}</h1>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-700 mt-1">
+                      <span>Room ID: <strong className="font-mono text-black">{currentRoom.id.slice(0, 10)}</strong></span>
+                      {currentRoom.description && (
+                        <>
+                          <span>•</span>
+                          <span className="text-zinc-600 italic">{currentRoom.description}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right flex flex-col items-end shrink-0">
+                    <BarcodeRenderer
+                      value={`RM-${currentRoom.name.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)}`}
+                      width={1.5}
+                      height={40}
+                      fontSize={11}
+                      displayValue={true}
+                      lineColor="#000000"
+                    />
+                    <span className="text-[10px] text-zinc-500 font-mono mt-1">
+                      Printed {new Date().toLocaleDateString()} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Room Statistics Metrics Bar */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 bg-zinc-100 border border-zinc-300 rounded-lg mb-4 text-center text-xs">
+                  <div>
+                    <span className="text-zinc-600 block text-[10px] uppercase font-bold tracking-wider">Total Items</span>
+                    <span className="text-lg font-black text-black">
+                      {roomItems.length}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-600 block text-[10px] uppercase font-bold tracking-wider">Storage Boxes</span>
+                    <span className="text-lg font-black text-black">
+                      {roomBoxes.length}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-600 block text-[10px] uppercase font-bold tracking-wider">Loose (Unboxed)</span>
+                    <span className="text-lg font-black text-black">
+                      {roomItems.filter((i) => !i.boxId).length}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-600 block text-[10px] uppercase font-bold tracking-wider">Total Units</span>
+                    <span className="text-lg font-black text-black">
+                      {roomItems.reduce((sum, item) => sum + (item.quantity || 1), 0)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Registered Storage Boxes in this Room Summary */}
+                {roomBoxes.length > 0 && (
+                  <div className="mb-6 print-packing-slip-section">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-black mb-2 flex items-center justify-between">
+                      <span>Storage Boxes In This Room ({roomBoxes.length}):</span>
+                      <span className="text-[10px] font-normal text-zinc-600 font-mono">Scan box barcodes to inspect</span>
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                      {roomBoxes.map((box) => {
+                        const boxCount = items.filter((i) => i.boxId === box.id).length;
+                        return (
+                          <div key={box.id} className="p-2.5 border border-zinc-300 rounded-lg bg-zinc-50 flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-mono text-[11px] font-bold px-1.5 py-0.5 bg-black text-white rounded">
+                                  {box.boxCode}
+                                </span>
+                                <span className="text-xs font-bold text-black truncate" title={box.name}>
+                                  {box.name}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-zinc-600 mt-1 truncate">
+                                Placement: <strong>{box.location || 'Unassigned'}</strong>
+                              </p>
+                              <span className="text-[10px] text-zinc-800 font-semibold mt-0.5 block">
+                                {boxCount} item{boxCount !== 1 ? 's' : ''} packed inside
+                              </span>
+                            </div>
+                            <div className="shrink-0 flex flex-col items-end">
+                              <BarcodeRenderer
+                                value={box.barcode || box.boxCode}
+                                width={1.0}
+                                height={24}
+                                fontSize={9}
+                                displayValue={false}
+                                lineColor="#000000"
+                              />
+                              <span className="font-mono text-[9px] text-zinc-600 mt-0.5">
+                                {box.boxCode}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Items Manifest List */}
+                {roomGroupByBox ? (
+                  /* MODE A: Grouped by Storage Box + Loose Items */
+                  <div className="space-y-6">
+                    {/* Iterate through each box in this room */}
+                    {roomBoxes.map((box) => {
+                      const boxItems = items.filter((i) => i.boxId === box.id);
+                      if (boxItems.length === 0) return null;
+
+                      return (
+                        <div key={box.id} className="border border-black rounded-lg overflow-hidden print-packing-slip-section">
+                          {/* Box section header */}
+                          <div className="bg-zinc-100 p-2.5 sm:px-3.5 border-b border-black flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="font-mono text-xs font-bold px-2 py-0.5 bg-black text-white rounded">
+                                {box.boxCode}
+                              </span>
+                              <span className="text-sm font-bold text-black truncate">{box.name}</span>
+                              <span className="text-xs text-zinc-600">({box.location})</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs">
+                              <span className="font-semibold text-black">
+                                {boxItems.length} item{boxItems.length !== 1 ? 's' : ''}
+                              </span>
+                              <span className="font-mono text-[11px] text-zinc-600">
+                                Barcode: {box.barcode || box.boxCode}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Items Table for this Box */}
+                          <table className="w-full text-xs text-left border-collapse">
+                            <thead>
+                              <tr className="border-b border-zinc-300 bg-zinc-50 text-zinc-800 font-semibold">
+                                <th className="py-1.5 px-2 w-8 text-center">✓</th>
+                                <th className="py-1.5 px-2">Barcode</th>
+                                {slipIncludePhotos && <th className="py-1.5 px-2 w-12 text-center">Photo</th>}
+                                <th className="py-1.5 px-2">Item Name & Brand</th>
+                                <th className="py-1.5 px-2">Category</th>
+                                <th className="py-1.5 px-2">Protocol</th>
+                                <th className="py-1.5 px-2 text-center">Qty</th>
+                                <th className="py-1.5 px-2">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {boxItems.map((item) => (
+                                <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50">
+                                  <td className="py-2 px-2 text-center">
+                                    <div className="w-3.5 h-3.5 border border-black rounded-xs mx-auto" />
+                                  </td>
+                                  <td className="py-2 px-2 font-mono font-bold text-black whitespace-nowrap">
+                                    {item.barcode}
+                                  </td>
+                                  {slipIncludePhotos && (
+                                    <td className="py-2 px-2 text-center">
+                                      <div className="w-8 h-8 rounded border border-zinc-200 overflow-hidden mx-auto bg-zinc-50 flex items-center justify-center">
+                                        <PrintLabelImage
+                                          src={item.imageUrl}
+                                          name={item.name}
+                                          monochrome={monochromePhotos}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </div>
+                                    </td>
+                                  )}
+                                  <td className="py-2 px-2">
+                                    <div className="font-semibold text-black leading-tight">{item.name}</div>
+                                    <div className="text-[10px] text-zinc-600">
+                                      {item.brand} {item.modelNumber && `• ${item.modelNumber}`}
+                                      {item.serialNumber && ` • S/N: ${item.serialNumber}`}
+                                    </div>
+                                  </td>
+                                  <td className="py-2 px-2 text-zinc-800">{item.category}</td>
+                                  <td className="py-2 px-2">
+                                    {getProtocols(item).length > 0 ? (
+                                      <span className="font-semibold">{getProtocols(item).join(', ')}</span>
+                                    ) : (
+                                      item.protocol || '—'
+                                    )}
+                                  </td>
+                                  <td className="py-2 px-2 text-center font-bold text-black">{item.quantity}</td>
+                                  <td className="py-2 px-2 capitalize text-zinc-800">{item.status.replace('_', ' ')}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    })}
+
+                    {/* Loose / Unboxed Items in Room */}
+                    {roomIncludeLoose && (
+                      (() => {
+                        const looseItems = roomItems.filter((i) => !i.boxId);
+                        if (looseItems.length === 0) return null;
+
+                        return (
+                          <div className="border border-black rounded-lg overflow-hidden print-packing-slip-section">
+                            <div className="bg-zinc-100 p-2.5 sm:px-3.5 border-b border-black flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-xs font-bold px-2 py-0.5 bg-zinc-800 text-white rounded">
+                                  UNBOXED
+                                </span>
+                                <span className="text-sm font-bold text-black">
+                                  Loose Room Items (Not inside a storage box)
+                                </span>
+                              </div>
+                              <span className="text-xs font-semibold text-black">
+                                {looseItems.length} item{looseItems.length !== 1 ? 's' : ''}
+                              </span>
+                            </div>
+
+                            <table className="w-full text-xs text-left border-collapse">
+                              <thead>
+                                <tr className="border-b border-zinc-300 bg-zinc-50 text-zinc-800 font-semibold">
+                                  <th className="py-1.5 px-2 w-8 text-center">✓</th>
+                                  <th className="py-1.5 px-2">Barcode</th>
+                                  {slipIncludePhotos && <th className="py-1.5 px-2 w-12 text-center">Photo</th>}
+                                  <th className="py-1.5 px-2">Item Name & Brand</th>
+                                  <th className="py-1.5 px-2">Category</th>
+                                  <th className="py-1.5 px-2">Protocol</th>
+                                  <th className="py-1.5 px-2 text-center">Qty</th>
+                                  <th className="py-1.5 px-2">Status</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {looseItems.map((item) => (
+                                  <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50">
+                                    <td className="py-2 px-2 text-center">
+                                      <div className="w-3.5 h-3.5 border border-black rounded-xs mx-auto" />
+                                    </td>
+                                    <td className="py-2 px-2 font-mono font-bold text-black whitespace-nowrap">
+                                      {item.barcode}
+                                    </td>
+                                    {slipIncludePhotos && (
+                                      <td className="py-2 px-2 text-center">
+                                        <div className="w-8 h-8 rounded border border-zinc-200 overflow-hidden mx-auto bg-zinc-50 flex items-center justify-center">
+                                          <PrintLabelImage
+                                            src={item.imageUrl}
+                                            name={item.name}
+                                            monochrome={monochromePhotos}
+                                            className="w-full h-full object-cover"
+                                          />
+                                        </div>
+                                      </td>
+                                    )}
+                                    <td className="py-2 px-2">
+                                      <div className="font-semibold text-black leading-tight">{item.name}</div>
+                                      <div className="text-[10px] text-zinc-600">
+                                        {item.brand} {item.modelNumber && `• ${item.modelNumber}`}
+                                        {item.serialNumber && ` • S/N: ${item.serialNumber}`}
+                                      </div>
+                                    </td>
+                                    <td className="py-2 px-2 text-zinc-800">{item.category}</td>
+                                    <td className="py-2 px-2">
+                                      {getProtocols(item).length > 0 ? (
+                                        <span className="font-semibold">{getProtocols(item).join(', ')}</span>
+                                      ) : (
+                                        item.protocol || '—'
+                                      )}
+                                    </td>
+                                    <td className="py-2 px-2 text-center font-bold text-black">{item.quantity}</td>
+                                    <td className="py-2 px-2 capitalize text-zinc-800">{item.status.replace('_', ' ')}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        );
+                      })()
+                    )}
+
+                    {roomItems.length === 0 && (
+                      <div className="py-10 text-center text-zinc-500 border border-dashed border-zinc-300 rounded-xl">
+                        No inventory items are currently assigned to {currentRoom.name}.
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* MODE B: Consolidated Single Room Table */
+                  <div className="border border-black rounded-lg overflow-hidden print-packing-slip-section">
+                    <div className="bg-zinc-100 p-2.5 sm:px-3.5 border-b border-black flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider text-black">
+                        Room Inventory Manifest List
+                      </span>
+                      <span className="text-xs font-semibold text-black">
+                        {roomIncludeLoose ? roomItems.length : roomItems.filter((i) => i.boxId).length} Items Total
+                      </span>
+                    </div>
+
+                    <table className="w-full text-xs text-left border-collapse">
+                      <thead>
+                        <tr className="border-b-2 border-black bg-zinc-100 text-black font-semibold">
+                          <th className="py-2 px-2 w-8 text-center">✓</th>
+                          <th className="py-2 px-2">Barcode</th>
+                          {slipIncludePhotos && <th className="py-2 px-2 w-12 text-center">Photo</th>}
+                          <th className="py-2 px-2">Item Name & Details</th>
+                          <th className="py-2 px-2">Storage Box / Placement</th>
+                          <th className="py-2 px-2">Category</th>
+                          <th className="py-2 px-2">Protocol</th>
+                          <th className="py-2 px-2 text-center">Qty</th>
+                          <th className="py-2 px-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {roomItems
+                          .filter((i) => (roomIncludeLoose ? true : Boolean(i.boxId)))
+                          .map((item) => {
+                            const itemBox = boxes.find((b) => b.id === item.boxId);
+                            return (
+                              <tr key={item.id} className="border-b border-zinc-200 hover:bg-zinc-50">
+                                <td className="py-2 px-2 text-center">
+                                  <div className="w-3.5 h-3.5 border border-black rounded-xs mx-auto" />
+                                </td>
+                                <td className="py-2 px-2 font-mono font-bold text-black whitespace-nowrap">
+                                  {item.barcode}
+                                </td>
+                                {slipIncludePhotos && (
+                                  <td className="py-2 px-2 text-center">
+                                    <div className="w-8 h-8 rounded border border-zinc-200 overflow-hidden mx-auto bg-zinc-50 flex items-center justify-center">
+                                      <PrintLabelImage
+                                        src={item.imageUrl}
+                                        name={item.name}
+                                        monochrome={monochromePhotos}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                  </td>
+                                )}
+                                <td className="py-2 px-2">
+                                  <div className="font-semibold text-black leading-tight">{item.name}</div>
+                                  <div className="text-[10px] text-zinc-600">
+                                    {item.brand} {item.modelNumber && `• ${item.modelNumber}`}
+                                    {item.serialNumber && ` • S/N: ${item.serialNumber}`}
+                                  </div>
+                                </td>
+                                <td className="py-2 px-2">
+                                  {itemBox ? (
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 bg-black text-white rounded">
+                                        {itemBox.boxCode}
+                                      </span>
+                                      <span className="font-medium text-black truncate max-w-[120px]" title={itemBox.name}>
+                                        {itemBox.name}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="font-mono text-[11px] text-zinc-500 italic">
+                                      Loose (Unboxed)
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-2 px-2 text-zinc-800">{item.category}</td>
+                                <td className="py-2 px-2">
+                                  {getProtocols(item).length > 0 ? (
+                                    <span className="font-semibold">{getProtocols(item).join(', ')}</span>
+                                  ) : (
+                                    item.protocol || '—'
+                                  )}
+                                </td>
+                                <td className="py-2 px-2 text-center font-bold text-black">{item.quantity}</td>
+                                <td className="py-2 px-2 capitalize text-zinc-800">{item.status.replace('_', ' ')}</td>
+                              </tr>
+                            );
+                          })}
+                        {roomItems.length === 0 && (
+                          <tr>
+                            <td colSpan={slipIncludePhotos ? 9 : 8} className="py-8 text-center text-zinc-500 italic">
+                              No inventory items are currently assigned to this room.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Sign-off & Room Audit Verification Block */}
+                {slipShowSignatures && (
+                  <div className="mt-8 pt-4 border-t-2 border-black grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs print-packing-slip-section">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-zinc-600 block mb-3">Room Auditor / Inspector</span>
+                      <div className="border-b border-black pb-1">
+                        <span className="text-zinc-400 text-[11px]">Print Name</span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-zinc-600 block mb-3">Signature & Date</span>
+                      <div className="border-b border-black pb-1">
+                        <span className="text-zinc-400 text-[11px]">Date: __________________</span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-zinc-600 block mb-3">Audit / Moving Notes</span>
+                      <div className="border-b border-black pb-1">
+                        <span className="text-zinc-400 text-[11px]">Condition / missing items</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1624,6 +2381,79 @@ export const BarcodePrintModal: React.FC<BarcodePrintModalProps> = ({
   );
 };
 
+// Robust Label Image Component for labels with direct fetch, proxy fallback, and clean placeholder
+const PrintLabelImage: React.FC<{
+  src?: string;
+  name: string;
+  className?: string;
+  monochrome?: boolean;
+}> = ({ src, name, className = '', monochrome = false }) => {
+  const [hasTriedProxy, setHasTriedProxy] = useState(false);
+  const [hasFailedAll, setHasFailedAll] = useState(false);
+
+  if (!src || hasFailedAll) {
+    return (
+      <div className={`w-full h-full flex flex-col items-center justify-center text-zinc-400 bg-zinc-50 rounded p-0.5 text-center ${className}`}>
+        <Package className="w-5 h-5 text-zinc-400 stroke-[1.5]" />
+        <span className="text-[7px] text-zinc-500 font-mono leading-none mt-0.5 truncate max-w-full">
+          {name ? name.slice(0, 8) : ''}
+        </span>
+      </div>
+    );
+  }
+
+  const isLocalOrData = src.startsWith('data:') || src.startsWith('blob:') || src.startsWith('/');
+  const imageSource = hasTriedProxy && !isLocalOrData
+    ? `/api/proxy-image?url=${encodeURIComponent(src)}`
+    : src;
+
+  return (
+    <img
+      src={imageSource}
+      alt=""
+      referrerPolicy="no-referrer"
+      className={`w-full h-full object-contain ${
+        monochrome ? 'grayscale contrast-125' : ''
+      } ${className}`}
+      onError={() => {
+        if (!hasTriedProxy && !isLocalOrData) {
+          setHasTriedProxy(true);
+        } else {
+          setHasFailedAll(true);
+        }
+      }}
+    />
+  );
+};
+
+// Protocol badge style helper for labels (supports colorful badges or monochrome)
+function getLabelProtocolBadgeStyle(proto: string, monochrome: boolean) {
+  if (monochrome) {
+    return 'bg-zinc-100 text-zinc-900 border-zinc-300';
+  }
+  const clean = proto.trim();
+  switch (clean) {
+    case 'Matter':
+      return 'bg-violet-100 text-violet-800 border-violet-200';
+    case 'Zigbee':
+      return 'bg-amber-100 text-amber-800 border-amber-200';
+    case 'Z-Wave':
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'Thread':
+      return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    case 'HomeKit':
+      return 'bg-orange-100 text-orange-800 border-orange-200';
+    case 'Wi-Fi':
+      return 'bg-sky-100 text-sky-800 border-sky-200';
+    case 'Bluetooth':
+      return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+    case 'LoRaWAN':
+      return 'bg-teal-100 text-teal-800 border-teal-200';
+    default:
+      return 'bg-zinc-100 text-zinc-800 border-zinc-200';
+  }
+}
+
 // Helper: Render Single Avery 5150 Tag (2.625" x 1.0")
 function renderAverySingleTag(
   label: AveryLabelItem, 
@@ -1636,7 +2466,7 @@ function renderAverySingleTag(
   return (
     <div
       key={key}
-      className="print-label-item avery-5150-label bg-white border border-zinc-400 rounded-xs text-black flex flex-row items-center justify-between overflow-hidden shadow-xs print:shadow-none print:border-black"
+      className="print-label-item avery-5150-label bg-white border border-zinc-300 rounded-xs text-zinc-900 flex flex-row items-center justify-between overflow-hidden shadow-xs print:shadow-none print:border-black"
       style={{
         width: '2.625in',
         height: '1.0in',
@@ -1661,29 +2491,32 @@ function renderAverySingleTag(
       </div>
 
       {/* Center/Right: Metadata */}
-      <div className={`min-w-0 flex-1 flex flex-col justify-center leading-tight pl-1 border-l border-zinc-300 print:border-black ${
+      <div className={`min-w-0 flex-1 flex flex-col justify-center leading-tight pl-1 border-l border-zinc-200 print:border-black ${
         hasImage ? 'pr-1' : ''
       }`}>
         <div className="flex items-center gap-1 min-w-0">
           {label.badge && (
-            <span className="font-mono text-[7px] font-black bg-black text-white px-1 py-0.2 rounded-xs shrink-0">
+            <span className="font-mono text-[7px] font-bold bg-zinc-900 text-white px-1 py-0.2 rounded-xs shrink-0">
               {label.badge}
             </span>
           )}
-          <span className="font-bold text-[8px] leading-tight truncate text-black" title={label.title}>
+          <span className="font-bold text-[8px] leading-tight truncate text-zinc-950" title={label.title}>
             {label.title}
           </span>
         </div>
-        <div className="text-[7px] text-zinc-700 font-medium truncate mt-0.5" title={label.subtitle}>
+        <div className="text-[7px] text-zinc-600 font-medium truncate mt-0.5" title={label.subtitle}>
           {label.subtitle}
         </div>
-        <div className="text-[6.5px] text-zinc-600 truncate mt-0.5" title={label.meta}>
+        <div className="text-[6.5px] text-zinc-500 truncate mt-0.5" title={label.meta}>
           {label.meta}
         </div>
         {label.protocols && label.protocols.length > 0 && (
           <div className="flex flex-wrap gap-0.5 mt-0.5">
             {label.protocols.slice(0, 1).map((p) => (
-              <span key={p} className="text-[6px] font-bold uppercase px-0.8 py-0.1 border border-zinc-400 rounded-xs bg-zinc-100 text-zinc-800">
+              <span
+                key={p}
+                className={`text-[6px] font-bold uppercase px-0.8 py-0.1 border rounded-xs ${getLabelProtocolBadgeStyle(p, monochromePhotos)}`}
+              >
                 {p}
               </span>
             ))}
@@ -1693,19 +2526,11 @@ function renderAverySingleTag(
 
       {/* Right: Item Image (if enabled and present) */}
       {hasImage && (
-        <div className="shrink-0 w-[0.52in] h-[0.78in] ml-0.5 flex items-center justify-center border border-zinc-300 rounded bg-white p-0.5 overflow-hidden">
-          <img
+        <div className="shrink-0 w-[0.52in] h-[0.78in] ml-0.5 flex items-center justify-center border border-zinc-200 rounded bg-white p-0.5 overflow-hidden">
+          <PrintLabelImage
             src={label.imageUrl}
-            alt={label.title}
-            referrerPolicy="no-referrer"
-            className={`w-full h-full object-contain ${monochromePhotos ? 'grayscale contrast-125' : ''}`}
-            onError={(e) => {
-              const target = e.currentTarget;
-              if (!target.dataset.triedProxy && label.imageUrl) {
-                target.dataset.triedProxy = 'true';
-                target.src = `/api/proxy-image?url=${encodeURIComponent(label.imageUrl)}`;
-              }
-            }}
+            name={label.title}
+            monochrome={monochromePhotos}
           />
         </div>
       )}
@@ -1725,22 +2550,22 @@ function renderCompactItemCard(
   return (
     <div
       key={key}
-      className="print-label-item bg-white border-2 border-black rounded-lg p-2 text-black flex flex-col justify-between shadow-xs print:shadow-none print:m-1 w-[220px] min-h-[105px]"
+      className="print-label-item bg-white border border-zinc-300 print:border-black rounded-lg p-2 text-zinc-900 flex flex-col justify-between shadow-xs print:shadow-none print:m-1 w-[220px] min-h-[105px]"
     >
-      <div className="flex justify-between items-start border-b border-black/30 pb-1 gap-1">
+      <div className="flex justify-between items-start border-b border-zinc-200 print:border-black/30 pb-1 gap-1">
         <div className="min-w-0 flex-1">
-          <div className="font-bold text-xs leading-tight truncate text-black">
+          <div className="font-bold text-xs leading-tight truncate text-zinc-950">
             {item.name}
           </div>
-          <div className="text-[9px] text-zinc-700 truncate">
-            <span className="font-semibold text-black">{item.brand}</span>
+          <div className="text-[9px] text-zinc-600 truncate">
+            <span className="font-semibold text-zinc-900">{item.brand}</span>
             {item.modelNumber && ` • Mod: ${item.modelNumber}`}
           </div>
         </div>
         {protos.length > 0 && (
           <div className="flex flex-wrap gap-0.5 shrink-0 justify-end max-w-[80px]">
             {protos.slice(0, 2).map((p) => (
-              <span key={p} className="text-[7px] font-bold uppercase px-1 py-0.2 border border-black rounded bg-zinc-100 text-black">
+              <span key={p} className={`text-[7px] font-bold uppercase px-1 py-0.2 border rounded ${getLabelProtocolBadgeStyle(p, false)}`}>
                 {p}
               </span>
             ))}
@@ -1759,7 +2584,7 @@ function renderCompactItemCard(
         />
       </div>
 
-      <div className="border-t border-black/30 pt-1 text-[8px] text-zinc-800 flex justify-between items-center font-mono">
+      <div className="border-t border-zinc-200 print:border-black/30 pt-1 text-[8px] text-zinc-700 flex justify-between items-center font-mono">
         <span className="truncate">LOC: {getRoomName(item.roomId)}</span>
         <span className="truncate ml-1 font-bold">{getBoxName(item.boxId).split('•')[0]}</span>
       </div>
@@ -1776,14 +2601,14 @@ function renderCompactBoxCard(
   return (
     <div
       key={key}
-      className="print-label-item bg-white border-2 border-black rounded-lg p-2.5 text-black flex flex-col justify-between shadow-xs print:shadow-none print:m-1 w-[240px] min-h-[115px]"
+      className="print-label-item bg-white border border-zinc-300 print:border-black rounded-lg p-2.5 text-zinc-900 flex flex-col justify-between shadow-xs print:shadow-none print:m-1 w-[240px] min-h-[115px]"
     >
-      <div className="flex items-center justify-between border-b border-black/30 pb-1 gap-1.5">
+      <div className="flex items-center justify-between border-b border-zinc-200 print:border-black/30 pb-1 gap-1.5">
         <div className="flex items-center gap-1.5">
-          <span className="font-mono text-xs font-black bg-black text-white px-1.5 py-0.5 rounded">
+          <span className="font-mono text-xs font-bold bg-zinc-900 text-white px-1.5 py-0.5 rounded">
             {box.boxCode}
           </span>
-          <span className="font-bold text-xs truncate max-w-[140px]">
+          <span className="font-bold text-xs text-zinc-950 truncate max-w-[140px]">
             {box.name}
           </span>
         </div>
@@ -1798,7 +2623,7 @@ function renderCompactBoxCard(
           lineColor="#000000"
         />
       </div>
-      <div className="border-t border-black/30 pt-1 text-[8.5px] text-zinc-800 flex justify-between items-center font-mono">
+      <div className="border-t border-zinc-200 print:border-black/30 pt-1 text-[8.5px] text-zinc-700 flex justify-between items-center font-mono">
         <span>{getRoomName(box.roomId)}</span>
         <span className="font-bold">{box.location || 'Storage Box'}</span>
       </div>
@@ -1823,17 +2648,17 @@ function renderStandardItemCard(
   return (
     <div
       key={key}
-      className={`print-label-item bg-white border-2 border-black rounded-xl p-3 text-black flex flex-col justify-between shadow-xs print:shadow-none print:m-1 ${
+      className={`print-label-item bg-white border border-zinc-300 print:border-black rounded-xl p-3 text-zinc-900 flex flex-col justify-between shadow-xs print:shadow-none print:m-1 ${
         isTote ? 'w-[360px] min-h-[190px]' : 'w-[310px] min-h-[150px]'
       }`}
     >
-      <div className="flex justify-between items-start border-b border-black/30 pb-1.5 gap-2">
+      <div className="flex justify-between items-start border-b border-zinc-200 print:border-black/30 pb-1.5 gap-2">
         <div className="min-w-0 flex-1">
-          <div className={`font-bold leading-tight truncate text-black ${isTote ? 'text-sm' : 'text-xs'}`}>
+          <div className={`font-bold leading-tight truncate text-zinc-950 ${isTote ? 'text-sm' : 'text-xs'}`}>
             {item.name}
           </div>
-          <div className="text-[10px] text-zinc-700 font-medium truncate mt-0.5">
-            <span className="font-semibold text-black">{item.brand}</span>
+          <div className="text-[10px] text-zinc-600 font-medium truncate mt-0.5">
+            <span className="font-semibold text-zinc-900">{item.brand}</span>
             {item.modelNumber && ` • Mod: ${item.modelNumber}`}
           </div>
         </div>
@@ -1842,7 +2667,7 @@ function renderStandardItemCard(
             {protos.map((proto) => (
               <span
                 key={proto}
-                className="text-[8.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 border border-black rounded bg-zinc-100 text-black"
+                className={`text-[8.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 border rounded ${getLabelProtocolBadgeStyle(proto, monochromePhotos)}`}
               >
                 {proto}
               </span>
@@ -1854,22 +2679,14 @@ function renderStandardItemCard(
       <div className="my-2 py-0.5 bg-white flex items-center justify-between gap-3">
         {hasImage && (
           <div
-            className={`shrink-0 flex items-center justify-center border border-zinc-400 rounded-lg bg-white p-1 overflow-hidden ${
+            className={`shrink-0 flex items-center justify-center border border-zinc-300 rounded-lg bg-white p-1 overflow-hidden ${
               isTote ? 'w-[76px] h-[76px]' : 'w-[56px] h-[56px]'
             }`}
           >
-            <img
+            <PrintLabelImage
               src={item.imageUrl}
-              alt={item.name}
-              referrerPolicy="no-referrer"
-              className={`w-full h-full object-contain ${monochromePhotos ? 'grayscale contrast-125' : ''}`}
-              onError={(e) => {
-                const target = e.currentTarget;
-                if (!target.dataset.triedProxy && item.imageUrl) {
-                  target.dataset.triedProxy = 'true';
-                  target.src = `/api/proxy-image?url=${encodeURIComponent(item.imageUrl)}`;
-                }
-              }}
+              name={item.name}
+              monochrome={monochromePhotos}
             />
           </div>
         )}
@@ -1886,7 +2703,7 @@ function renderStandardItemCard(
         </div>
       </div>
 
-      <div className="border-t border-black/30 pt-1 text-[9px] text-zinc-800 flex justify-between items-center font-mono">
+      <div className="border-t border-zinc-200 print:border-black/30 pt-1 text-[9px] text-zinc-700 flex justify-between items-center font-mono">
         <span className="truncate">LOC: {getRoomName(item.roomId)}</span>
         <span className="truncate ml-1 font-bold">{getBoxName(item.boxId)}</span>
       </div>
@@ -1904,16 +2721,16 @@ function renderStandardBoxCard(
   return (
     <div
       key={key}
-      className={`print-label-item bg-white border-2 border-black rounded-xl p-4 text-black flex flex-col justify-between shadow-xs print:shadow-none print:m-1 ${
+      className={`print-label-item bg-white border border-zinc-300 print:border-black rounded-xl p-4 text-zinc-900 flex flex-col justify-between shadow-xs print:shadow-none print:m-1 ${
         isTote ? 'w-[380px] min-h-[210px]' : 'w-[320px] min-h-[170px]'
       }`}
     >
-      <div className="flex items-center justify-between border-b-2 border-black pb-2">
+      <div className="flex items-center justify-between border-b border-zinc-200 print:border-black/30 pb-2">
         <div className="flex items-center gap-2">
-          <div className="font-mono text-base font-black bg-black text-white px-2 py-0.5 rounded">
+          <div className="font-mono text-base font-bold bg-zinc-900 text-white px-2 py-0.5 rounded">
             {box.boxCode}
           </div>
-          <div className="font-bold text-sm text-black truncate max-w-[200px]">
+          <div className="font-bold text-sm text-zinc-950 truncate max-w-[200px]">
             {box.name}
           </div>
         </div>
@@ -1930,12 +2747,12 @@ function renderStandardBoxCard(
         />
       </div>
 
-      <div className="border-t border-black/40 pt-2 text-xs flex justify-between items-center">
+      <div className="border-t border-zinc-200 print:border-black/30 pt-2 text-xs flex justify-between items-center">
         <div>
-          <span className="font-semibold text-black">Room:</span> {getRoomName(box.roomId)}
+          <span className="font-semibold text-zinc-900">Room:</span> {getRoomName(box.roomId)}
         </div>
-        <div className="text-[11px] text-zinc-800">
-          <span className="font-semibold text-black">Loc:</span> {box.location}
+        <div className="text-[11px] text-zinc-700">
+          <span className="font-semibold text-zinc-900">Loc:</span> {box.location}
         </div>
       </div>
 

@@ -201,10 +201,12 @@ async function startServer() {
     }
 
     try {
+      const urlObj = new URL(targetUrl);
       const response = await fetch(targetUrl, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+          'Referer': `${urlObj.origin}/`
         }
       });
 
@@ -213,7 +215,37 @@ async function startServer() {
         return;
       }
 
-      const contentType = response.headers.get('content-type') || 'image/jpeg';
+      let contentType = response.headers.get('content-type') || 'image/jpeg';
+
+      // If upstream returned HTML (e.g. user pasted product page URL), try to extract og:image or twitter:image
+      if (contentType.includes('text/html')) {
+        const html = await response.text();
+        const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+                        html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i) ||
+                        html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i);
+        if (ogMatch && ogMatch[1]) {
+          let ogUrl = ogMatch[1];
+          if (ogUrl.startsWith('/')) {
+            ogUrl = new URL(ogUrl, urlObj.origin).toString();
+          }
+          const ogRes = await fetch(ogUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+              'Accept': 'image/*,*/*',
+              'Referer': `${urlObj.origin}/`
+            }
+          });
+          if (ogRes.ok) {
+            const ogContentType = ogRes.headers.get('content-type') || 'image/jpeg';
+            res.setHeader('Content-Type', ogContentType);
+            res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400');
+            const ogBuf = await ogRes.arrayBuffer();
+            res.send(Buffer.from(ogBuf));
+            return;
+          }
+        }
+      }
+
       res.setHeader('Content-Type', contentType);
       res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400');
 

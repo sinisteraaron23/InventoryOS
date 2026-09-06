@@ -107,6 +107,8 @@ export default function App() {
   const [isPrinterOpen, setIsPrinterOpen] = useState(false);
   const [printTargetItem, setPrintTargetItem] = useState<InventoryItem | null>(null);
   const [printTargetBox, setPrintTargetBox] = useState<StorageBox | null>(null);
+  const [printTargetRoom, setPrintTargetRoom] = useState<Room | null>(null);
+  const [initialPrintTarget, setInitialPrintTarget] = useState<'item' | 'box' | 'box_items' | 'all_items' | 'box_sheet' | 'room_sheet' | undefined>(undefined);
 
   const [detailItem, setDetailItem] = useState<InventoryItem | null>(null);
   const [detailBox, setDetailBox] = useState<StorageBox | null>(null);
@@ -575,6 +577,8 @@ export default function App() {
         onOpenPrinter={() => {
           setPrintTargetItem(null);
           setPrintTargetBox(null);
+          setPrintTargetRoom(null);
+          setInitialPrintTarget(undefined);
           setIsPrinterOpen(true);
         }}
         onOpenNewItem={() => setItemFormState({ isOpen: true, item: null })}
@@ -703,6 +707,15 @@ export default function App() {
                     onPrintBoxLabel={(b) => {
                       setPrintTargetBox(b);
                       setPrintTargetItem(null);
+                      setPrintTargetRoom(null);
+                      setInitialPrintTarget('box');
+                      setIsPrinterOpen(true);
+                    }}
+                    onPrintBoxPackingSlip={(b) => {
+                      setPrintTargetBox(b);
+                      setPrintTargetItem(null);
+                      setPrintTargetRoom(null);
+                      setInitialPrintTarget('box_sheet');
                       setIsPrinterOpen(true);
                     }}
                     onAddItemToBox={(b) => {
@@ -727,6 +740,13 @@ export default function App() {
             onFilterByRoom={(roomId) => {
               setFilters((prev) => ({ ...prev, roomId }));
               setActiveTab('items');
+            }}
+            onPrintRoomPackingSlip={(r) => {
+              setPrintTargetRoom(r);
+              setPrintTargetBox(null);
+              setPrintTargetItem(null);
+              setInitialPrintTarget('room_sheet');
+              setIsPrinterOpen(true);
             }}
           />
         )}
@@ -760,6 +780,8 @@ export default function App() {
             onClick={() => {
               setPrintTargetItem(null);
               setPrintTargetBox(null);
+              setPrintTargetRoom(null);
+              setInitialPrintTarget(undefined);
               setIsPrinterOpen(true);
             }}
             className="p-2 text-slate-300 hover:text-white rounded-xl"
@@ -791,12 +813,20 @@ export default function App() {
       {/* 2. Barcode Print Modal */}
       <BarcodePrintModal
         isOpen={isPrinterOpen}
-        onClose={() => setIsPrinterOpen(false)}
+        onClose={() => {
+          setIsPrinterOpen(false);
+          setPrintTargetItem(null);
+          setPrintTargetBox(null);
+          setPrintTargetRoom(null);
+          setInitialPrintTarget(undefined);
+        }}
         items={items}
         boxes={boxes}
         rooms={rooms}
         initialSelectedItem={printTargetItem}
         initialSelectedBox={printTargetBox}
+        initialSelectedRoom={printTargetRoom}
+        initialPrintTarget={initialPrintTarget}
       />
 
       {/* 3. Item Detail Modal */}
@@ -811,6 +841,8 @@ export default function App() {
         onPrintBarcode={(it) => {
           setPrintTargetItem(it);
           setPrintTargetBox(null);
+          setPrintTargetRoom(null);
+          setInitialPrintTarget('item');
           setIsPrinterOpen(true);
         }}
         onUpdateItem={handleSaveItem}
@@ -832,6 +864,15 @@ export default function App() {
         onPrintBoxLabel={(b) => {
           setPrintTargetBox(b);
           setPrintTargetItem(null);
+          setPrintTargetRoom(null);
+          setInitialPrintTarget('box');
+          setIsPrinterOpen(true);
+        }}
+        onPrintBoxPackingSlip={(b) => {
+          setPrintTargetBox(b);
+          setPrintTargetItem(null);
+          setPrintTargetRoom(null);
+          setInitialPrintTarget('box_sheet');
           setIsPrinterOpen(true);
         }}
         onRemoveItemFromBox={handleRemoveItemFromBox}

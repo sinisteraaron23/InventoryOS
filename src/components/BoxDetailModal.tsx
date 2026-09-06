@@ -10,7 +10,8 @@ import {
   Edit2, 
   Trash2, 
   ExternalLink,
-  ArrowRightLeft
+  ArrowRightLeft,
+  FileText
 } from 'lucide-react';
 import type { StorageBox, InventoryItem, Room } from '../types';
 import { BarcodeRenderer } from './BarcodeRenderer';
@@ -26,6 +27,7 @@ interface BoxDetailModalProps {
   onEditBox: (box: StorageBox) => void;
   onDeleteBox: (box: StorageBox) => void;
   onPrintBoxLabel: (box: StorageBox) => void;
+  onPrintBoxPackingSlip?: (box: StorageBox) => void;
   onRemoveItemFromBox: (item: InventoryItem) => void;
 }
 
@@ -40,6 +42,7 @@ export const BoxDetailModal: React.FC<BoxDetailModalProps> = ({
   onEditBox,
   onDeleteBox,
   onPrintBoxLabel,
+  onPrintBoxPackingSlip,
   onRemoveItemFromBox
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -108,12 +111,23 @@ export const BoxDetailModal: React.FC<BoxDetailModalProps> = ({
                   lineColor="#000000"
                 />
               </div>
-              <button
-                onClick={() => onPrintBoxLabel(box)}
-                className="mt-1.5 inline-flex items-center gap-1 text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium hover:underline"
-              >
-                <Printer className="w-3.5 h-3.5" /> Print Box Label
-              </button>
+              <div className="mt-2 flex items-center gap-2">
+                <button
+                  onClick={() => onPrintBoxLabel(box)}
+                  className="inline-flex items-center gap-1 text-xs text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white font-medium hover:underline cursor-pointer"
+                  title="Print Storage Box Label Placard"
+                >
+                  <Printer className="w-3.5 h-3.5" /> Box Label
+                </button>
+                <span className="text-zinc-300 dark:text-zinc-600">•</span>
+                <button
+                  onClick={() => onPrintBoxPackingSlip ? onPrintBoxPackingSlip(box) : onPrintBoxLabel(box)}
+                  className="inline-flex items-center gap-1 text-xs text-black dark:text-white font-semibold hover:underline cursor-pointer"
+                  title="Print Storage Box Packing Slip & Contents"
+                >
+                  <FileText className="w-3.5 h-3.5" /> Packing Slip
+                </button>
+              </div>
             </div>
           </div>
 

@@ -24,7 +24,7 @@ export const InventoryOSIcon: React.FC<{ size?: 'sm' | 'md' | 'lg'; className?: 
 
   return (
     <div
-      className={`relative shrink-0 flex items-center justify-center bg-gradient-to-b from-[#564BFF] via-[#4F46E5] to-[#4338CA] text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)] dark:shadow-[0_4px_20px_rgba(79,70,229,0.45)] border border-indigo-400/20 ${containerSizes[size]} ${className}`}
+      className={`relative shrink-0 flex items-center justify-center bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-sm border border-zinc-800 dark:border-zinc-200 ${containerSizes[size]} ${className}`}
       aria-hidden="true"
     >
       <svg
@@ -68,16 +68,16 @@ export const InventoryOSLogo: React.FC<InventoryOSLogoProps> = ({
   };
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div className={`flex items-center gap-2.5 ${className}`}>
       <InventoryOSIcon size={size} />
       <div className="flex flex-col">
         <div className="flex items-center">
-          <span className={`font-bold tracking-tight leading-none text-slate-900 dark:text-white ${titleSizes[size]}`}>
-            Inventory<span className="text-[#8B95F6] dark:text-[#8B95F6]">OS</span>
+          <span className={`font-bold tracking-tight leading-none text-zinc-900 dark:text-white ${titleSizes[size]}`}>
+            Inventory<span className="text-zinc-400 dark:text-zinc-500">OS</span>
           </span>
         </div>
         {showSubtitle && (
-          <span className={`text-slate-500 dark:text-[#94A3B8] font-normal leading-tight mt-0.5 tracking-tight ${subtitleSizes[size]}`}>
+          <span className={`text-zinc-500 dark:text-zinc-400 font-normal leading-tight mt-0.5 tracking-tight ${subtitleSizes[size]}`}>
             Home Inventory System
           </span>
         )}
