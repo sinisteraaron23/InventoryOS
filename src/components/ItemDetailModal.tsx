@@ -18,11 +18,13 @@ import {
   Plus,
   Minus,
   Image as ImageIcon,
-  Search
+  Search,
+  Bluetooth
 } from 'lucide-react';
 import type { InventoryItem, StorageBox, Room } from '../types';
 import { BarcodeRenderer } from './BarcodeRenderer';
 import { GoogleImageSearchModal } from './GoogleImageSearchModal';
+import { BluetoothPTouchModal } from './BluetoothPTouchModal';
 
 interface ItemDetailModalProps {
   item: InventoryItem | null;
@@ -52,6 +54,7 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
   const [targetBoxId, setTargetBoxId] = useState<string>('');
   const [targetRoomId, setTargetRoomId] = useState<string>('');
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
+  const [isBluetoothOpen, setIsBluetoothOpen] = useState(false);
 
   if (!isOpen || !item) return null;
 
@@ -94,20 +97,24 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
     setIsRelocating(false);
   };
 
+  const itemProtocols = (item.protocols && item.protocols.length > 0)
+    ? item.protocols.filter((p) => p !== 'None')
+    : (item.protocol && item.protocol !== 'None' ? [item.protocol] : []);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
       <div className="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               {item.category}
             </span>
-            {item.protocol && item.protocol !== 'None' && (
-              <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-md flex items-center gap-1">
-                <Radio className="w-2.5 h-2.5" /> {item.protocol}
+            {itemProtocols.map((proto) => (
+              <span key={proto} className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-md flex items-center gap-1">
+                <Radio className="w-2.5 h-2.5" /> {proto}
               </span>
-            )}
+            ))}
           </div>
           <button
             onClick={onClose}
@@ -190,8 +197,16 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
                   {copiedBarcode ? 'Copied' : 'Copy'}
                 </button>
                 <button
+                  type="button"
+                  onClick={() => setIsBluetoothOpen(true)}
+                  title="Print directly to Brother P-Touch via Bluetooth"
+                  className="inline-flex items-center gap-1 text-xs text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/70 border border-sky-200 dark:border-sky-800 hover:bg-sky-100 dark:hover:bg-sky-900/60 px-2.5 py-1 rounded-md shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Bluetooth className="w-3 h-3 text-sky-600 dark:text-sky-400" /> Bluetooth P-Touch
+                </button>
+                <button
                   onClick={() => onPrintBarcode(item)}
-                  className="inline-flex items-center gap-1 text-xs text-white bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 px-2.5 py-1 rounded-md shadow-2xs transition-colors"
+                  className="inline-flex items-center gap-1 text-xs text-white bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 px-2.5 py-1 rounded-md shadow-2xs transition-colors cursor-pointer"
                 >
                   <Printer className="w-3 h-3" /> Print Label
                 </button>
@@ -375,6 +390,26 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
             </div>
           )}
 
+          {/* Smart Home Protocols */}
+          {itemProtocols.length > 0 && (
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+                Smart Home Protocols
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {itemProtocols.map((proto) => (
+                  <span
+                    key={proto}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800"
+                  >
+                    <Radio className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                    {proto}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Tags */}
           {item.tags && item.tags.length > 0 && (
             <div>
@@ -438,6 +473,17 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
         itemBrand={item.brand}
         itemModel={item.modelNumber}
         initialQuery={[item.brand, item.modelNumber, item.name].filter(Boolean).join(' ')}
+      />
+
+      {/* Bluetooth P-Touch Wireless Printing Modal */}
+      <BluetoothPTouchModal
+        isOpen={isBluetoothOpen}
+        onClose={() => setIsBluetoothOpen(false)}
+        item={item}
+        box={currentBox || null}
+        rooms={rooms}
+        boxes={boxes}
+        defaultTapeWidth={12}
       />
     </div>
   );

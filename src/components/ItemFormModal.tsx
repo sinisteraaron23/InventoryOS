@@ -10,7 +10,8 @@ import {
   Plus,
   Image as ImageIcon,
   Search,
-  Trash2
+  Trash2,
+  Radio
 } from 'lucide-react';
 import { GoogleImageSearchModal } from './GoogleImageSearchModal';
 import type { 
@@ -50,11 +51,10 @@ const CATEGORIES: ItemCategory[] = [
 ];
 
 const PROTOCOLS: SmartHomeProtocol[] = [
-  'None',
   'Matter',
+  'Thread',
   'Zigbee',
   'Z-Wave',
-  'Thread',
   'Wi-Fi',
   'Bluetooth',
   'Ethernet',
@@ -78,7 +78,7 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
   const [serialNumber, setSerialNumber] = useState('');
   const [barcode, setBarcode] = useState('');
   const [category, setCategory] = useState<ItemCategory>('Smart Home & IoT');
-  const [protocol, setProtocol] = useState<SmartHomeProtocol>('None');
+  const [selectedProtocols, setSelectedProtocols] = useState<SmartHomeProtocol[]>([]);
   const [roomId, setRoomId] = useState('');
   const [location, setLocation] = useState('');
   const [boxId, setBoxId] = useState<string>('');
@@ -99,6 +99,12 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
     setBarcode(`ITM-${randomNum}`);
   };
 
+  const toggleProtocol = (proto: SmartHomeProtocol) => {
+    setSelectedProtocols((prev) =>
+      prev.includes(proto) ? prev.filter((p) => p !== proto) : [...prev, proto]
+    );
+  };
+
   useEffect(() => {
     if (initialItem) {
       setName(initialItem.name);
@@ -107,7 +113,16 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
       setSerialNumber(initialItem.serialNumber || '');
       setBarcode(initialItem.barcode);
       setCategory(initialItem.category);
-      setProtocol(initialItem.protocol || 'None');
+      
+      // Load protocols (support both protocols array and legacy protocol field)
+      const initialProtocols: SmartHomeProtocol[] = [];
+      if (initialItem.protocols && Array.isArray(initialItem.protocols) && initialItem.protocols.length > 0) {
+        initialProtocols.push(...initialItem.protocols.filter((p) => p !== 'None'));
+      } else if (initialItem.protocol && initialItem.protocol !== 'None') {
+        initialProtocols.push(initialItem.protocol);
+      }
+      setSelectedProtocols(initialProtocols);
+
       setRoomId(initialItem.roomId);
       setLocation(initialItem.location || '');
       setBoxId(initialItem.boxId || '');
@@ -127,7 +142,7 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
       setSerialNumber('');
       setBarcode(prefilledBarcode || `ITM-${Math.floor(10000 + Math.random() * 90000)}`);
       setCategory('Smart Home & IoT');
-      setProtocol('None');
+      setSelectedProtocols([]);
       setRoomId(rooms[0]?.id || '');
       setLocation('');
       setBoxId(prefilledBoxId || '');
@@ -183,7 +198,8 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
       serialNumber: serialNumber.trim() || undefined,
       barcode: barcode.trim(),
       category,
-      protocol: protocol !== 'None' ? protocol : undefined,
+      protocol: selectedProtocols.length > 0 ? selectedProtocols[0] : undefined,
+      protocols: selectedProtocols,
       roomId: targetBox ? targetBox.roomId : roomId,
       location: targetBox ? (location || targetBox.location) : location,
       boxId: boxId || null,
@@ -386,8 +402,8 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
             </div>
           </div>
 
-          {/* Category & Smart Home Protocol */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Category & Smart Home Protocols */}
+          <div className="flex flex-col gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Category
@@ -403,19 +419,48 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
               </select>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Smart Home Protocol (if applicable)
-              </label>
-              <select
-                value={protocol}
-                onChange={(e) => setProtocol(e.target.value as SmartHomeProtocol)}
-                className="w-full text-xs py-2 px-3 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
-              >
-                {PROTOCOLS.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
+            <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5">
+                  <Radio className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                  <label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    Smart Home Protocols
+                  </label>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    (Multi-select: pick all that apply)
+                  </span>
+                </div>
+                {selectedProtocols.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProtocols([])}
+                    className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                  >
+                    Clear all ({selectedProtocols.length})
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {PROTOCOLS.map((p) => {
+                  const isSelected = selectedProtocols.includes(p);
+                  return (
+                    <button
+                      type="button"
+                      key={p}
+                      onClick={() => toggleProtocol(p)}
+                      className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-indigo-600 border-indigo-600 text-white font-semibold shadow-xs shadow-indigo-500/20'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                      }`}
+                    >
+                      {isSelected && <Check className="w-3 h-3 text-white stroke-[2.5]" />}
+                      {p}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

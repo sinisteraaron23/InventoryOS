@@ -24,6 +24,7 @@ export interface InventoryItem {
   barcode: string; // e.g., 'ITM-10024' or UPC/EAN code
   category: ItemCategory;
   protocol?: SmartHomeProtocol;
+  protocols?: SmartHomeProtocol[];
   roomId: string;
   location: string; // e.g. 'Shelf A', 'Top Drawer', 'TV Stand'
   boxId?: string | null; // ID of storage box if packed inside one

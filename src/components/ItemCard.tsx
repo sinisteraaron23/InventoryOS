@@ -44,6 +44,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const room = rooms.find((r) => r.id === item.roomId);
   const statusCfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.in_storage;
 
+  const itemProtocols = (item.protocols && item.protocols.length > 0)
+    ? item.protocols.filter((p) => p !== 'None')
+    : (item.protocol && item.protocol !== 'None' ? [item.protocol] : []);
+
   return (
     <div 
       className="group bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-lg transition-all flex flex-col justify-between overflow-hidden shadow-xs"
@@ -112,10 +116,17 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               {item.barcode}
             </span>
           </div>
-          {item.protocol && item.protocol !== 'None' && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/60 dark:border-indigo-800 px-2 py-0.5 rounded-md">
-              <Radio className="w-2.5 h-2.5" /> {item.protocol}
-            </span>
+          {itemProtocols.length > 0 && (
+            <div className="flex items-center gap-1 flex-wrap justify-end">
+              {itemProtocols.map((proto) => (
+                <span
+                  key={proto}
+                  className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/60 dark:border-indigo-800 px-2 py-0.5 rounded-md"
+                >
+                  <Radio className="w-2.5 h-2.5" /> {proto}
+                </span>
+              ))}
+            </div>
           )}
         </div>
 

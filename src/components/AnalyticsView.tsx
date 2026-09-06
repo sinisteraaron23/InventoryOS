@@ -30,9 +30,13 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   // Protocol stats
   const protocolCounts: { [key: string]: number } = {};
   items.forEach((it) => {
-    if (it.protocol && it.protocol !== 'None') {
-      protocolCounts[it.protocol] = (protocolCounts[it.protocol] || 0) + it.quantity;
-    }
+    const protoList = (it.protocols && it.protocols.length > 0)
+      ? it.protocols.filter((p) => p !== 'None')
+      : (it.protocol && it.protocol !== 'None' ? [it.protocol] : []);
+    
+    protoList.forEach((proto) => {
+      protocolCounts[proto] = (protocolCounts[proto] || 0) + it.quantity;
+    });
   });
 
   // Category stats

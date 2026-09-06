@@ -498,7 +498,9 @@ export default function App() {
           (it.serialNumber && it.serialNumber.toLowerCase().includes(q)) ||
           (it.location && it.location.toLowerCase().includes(q)) ||
           (it.notes && it.notes.toLowerCase().includes(q)) ||
-          (it.tags && it.tags.some((t) => t.toLowerCase().includes(q)))
+          (it.tags && it.tags.some((t) => t.toLowerCase().includes(q))) ||
+          (it.protocols && it.protocols.some((p) => p.toLowerCase().includes(q))) ||
+          (it.protocol && it.protocol.toLowerCase().includes(q))
       );
     }
 
@@ -529,7 +531,12 @@ export default function App() {
 
     // Protocol
     if (filters.protocol) {
-      result = result.filter((it) => it.protocol === filters.protocol);
+      result = result.filter((it) => {
+        if (it.protocols && it.protocols.length > 0) {
+          return it.protocols.includes(filters.protocol as any);
+        }
+        return it.protocol === filters.protocol;
+      });
     }
 
     // Sorting
@@ -583,7 +590,7 @@ export default function App() {
 
       {/* Auth Banner message if notice exists */}
       {authError && (
-        <div className="bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-800 px-4 py-2 text-xs text-amber-800 dark:text-amber-300 text-center flex items-center justify-center gap-2">
+        <div className="bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-800 px-4 py-2 text-xs text-amber-800 dark:text-amber-300 text-center flex items-center justify-center gap-2 print:hidden">
           <AlertCircle className="w-4 h-4" />
           <span>{authError}</span>
           <button onClick={() => setAuthError(null)} className="font-bold underline ml-2 cursor-pointer">Dismiss</button>
@@ -591,7 +598,7 @@ export default function App() {
       )}
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 print:hidden">
         
         {/* Tab 1: ITEMS CATALOG */}
         {activeTab === 'items' && (
