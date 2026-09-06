@@ -1,0 +1,7 @@
+{
+  "name": "Household Inventory Manager",
+  "description": "Keep track of household items, electronics, and smart home gear sorted by storage boxes, rooms, and locations with visual barcode scanning, printing, and real-time cloud sync.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

@@ -1,0 +1,12 @@
+{
+  "projectId": "paycheckguard",
+  "appId": "1:153911107360:web:bff74b4debd757c6ff8145",
+  "apiKey": "AIzaSyAHg9C4A5EXkzutykB3D6MZkCTOpGx-aRg",
+  "authDomain": "paycheckguard.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-householdinvento-2dd8eacb-374b-444e-bc3c-9df4ea65939d",
+  "storageBucket": "paycheckguard.firebasestorage.app",
+  "messagingSenderId": "153911107360",
+  "measurementId": "",
+  "oAuthClientId": "153911107360-2m6tcpdrt57517ajmtt9i04sdjtrt99d.apps.googleusercontent.com",
+  "recaptchaSiteKey": ""
+}
