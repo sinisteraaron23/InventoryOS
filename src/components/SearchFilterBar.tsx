@@ -124,28 +124,28 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
     filters.onlyUnboxed;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs p-5 mb-6 transition-colors">
+    <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xs p-5 mb-6 transition-colors">
       {/* Primary Search Row */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
         {/* Search input with Bento Pill Design */}
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-500 pointer-events-none" />
           <input
             type="text"
             value={filters.searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search by item, barcode, brand, model, room, or box..."
-            className="w-full pl-11 pr-16 py-2.5 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 rounded-full text-sm text-slate-900 dark:text-slate-100 transition-all shadow-2xs focus:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
+            className="w-full pl-11 pr-16 py-2.5 bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 focus:border-zinc-900 dark:focus:border-white focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 rounded-full text-sm text-zinc-900 dark:text-zinc-100 transition-all shadow-2xs focus:outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
           />
           {filters.searchQuery ? (
             <button
               onClick={() => handleSearchChange('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
             >
               <X className="w-4 h-4" />
             </button>
           ) : (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-50 text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-600 pointer-events-none">
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-50 text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 pointer-events-none">
               ⌘K
             </div>
           )}
@@ -157,8 +157,8 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
             onClick={() => setShowAdvanced(!showAdvanced)}
             className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-semibold border transition-all ${
               showAdvanced || hasActiveFilters
-                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-500/20'
-                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750'
+                ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white shadow-xs'
+                : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700'
             }`}
           >
             <Filter className="w-3.5 h-3.5" />
@@ -170,102 +170,102 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
             <select
               value={filters.sortBy}
               onChange={handleSortChange}
-              className="appearance-none pl-8 pr-8 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 rounded-full text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer shadow-2xs"
+              className="appearance-none pl-8 pr-8 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 rounded-full text-xs font-semibold text-zinc-700 dark:text-zinc-200 focus:outline-none cursor-pointer shadow-2xs"
             >
-              <option value="name_asc" className="dark:bg-slate-800">Name (A-Z)</option>
-              <option value="name_desc" className="dark:bg-slate-800">Name (Z-A)</option>
-              <option value="date_desc" className="dark:bg-slate-800">Newest First</option>
-              <option value="date_asc" className="dark:bg-slate-800">Oldest First</option>
-              <option value="value_desc" className="dark:bg-slate-800">Highest Value</option>
-              <option value="quantity_desc" className="dark:bg-slate-800">Highest Quantity</option>
+              <option value="name_asc" className="dark:bg-zinc-800">Name (A-Z)</option>
+              <option value="name_desc" className="dark:bg-zinc-800">Name (Z-A)</option>
+              <option value="date_desc" className="dark:bg-zinc-800">Newest First</option>
+              <option value="date_asc" className="dark:bg-zinc-800">Oldest First</option>
+              <option value="value_desc" className="dark:bg-zinc-800">Highest Value</option>
+              <option value="quantity_desc" className="dark:bg-zinc-800">Highest Quantity</option>
             </select>
-            <ArrowUpDown className="absolute left-2.5 pointer-events-none w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+            <ArrowUpDown className="absolute left-2.5 pointer-events-none w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" />
           </div>
         </div>
       </div>
 
       {/* Advanced Filter Panel */}
       {showAdvanced && (
-        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/40 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           {/* Category */}
           <div>
-            <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <Tag className="w-3 h-3 text-slate-400 dark:text-slate-500" /> Category
+            <label className="block text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+              <Tag className="w-3 h-3 text-zinc-400 dark:text-zinc-500" /> Category
             </label>
             <select
               value={filters.category || 'All Categories'}
               onChange={(e) => handleCategoryChange(e.target.value)}
-              className="w-full text-xs py-2 px-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 text-slate-800 dark:text-slate-200 shadow-2xs"
+              className="w-full text-xs py-2 px-3 border border-zinc-200 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 text-zinc-800 dark:text-zinc-200 shadow-2xs"
             >
               {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat} className="dark:bg-slate-800">{cat}</option>
+                <option key={cat} value={cat} className="dark:bg-zinc-800">{cat}</option>
               ))}
             </select>
           </div>
 
           {/* Room */}
           <div>
-            <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <Home className="w-3 h-3 text-slate-400 dark:text-slate-500" /> Room Location
+            <label className="block text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+              <Home className="w-3 h-3 text-zinc-400 dark:text-zinc-500" /> Room Location
             </label>
             <select
               value={filters.roomId}
               onChange={(e) => handleRoomChange(e.target.value)}
-              className="w-full text-xs py-2 px-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 text-slate-800 dark:text-slate-200 shadow-2xs"
+              className="w-full text-xs py-2 px-3 border border-zinc-200 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 text-zinc-800 dark:text-zinc-200 shadow-2xs"
             >
-              <option value="" className="dark:bg-slate-800">All Rooms</option>
+              <option value="" className="dark:bg-zinc-800">All Rooms</option>
               {rooms.map((room) => (
-                <option key={room.id} value={room.id} className="dark:bg-slate-800">{room.name}</option>
+                <option key={room.id} value={room.id} className="dark:bg-zinc-800">{room.name}</option>
               ))}
             </select>
           </div>
 
           {/* Storage Box */}
           <div>
-            <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <BoxIcon className="w-3 h-3 text-slate-400 dark:text-slate-500" /> Storage Box
+            <label className="block text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+              <BoxIcon className="w-3 h-3 text-zinc-400 dark:text-zinc-500" /> Storage Box
             </label>
             <select
               value={filters.boxId}
               onChange={(e) => handleBoxChange(e.target.value)}
               disabled={filters.onlyUnboxed}
-              className="w-full text-xs py-2 px-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 text-slate-800 dark:text-slate-200 disabled:opacity-50 shadow-2xs"
+              className="w-full text-xs py-2 px-3 border border-zinc-200 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 text-zinc-800 dark:text-zinc-200 disabled:opacity-50 shadow-2xs"
             >
-              <option value="" className="dark:bg-slate-800">All Storage Boxes</option>
+              <option value="" className="dark:bg-zinc-800">All Storage Boxes</option>
               {boxes.map((box) => (
-                <option key={box.id} value={box.id} className="dark:bg-slate-800">{box.boxCode}: {box.name}</option>
+                <option key={box.id} value={box.id} className="dark:bg-zinc-800">{box.boxCode}: {box.name}</option>
               ))}
             </select>
           </div>
 
           {/* Smart Home Protocol */}
           <div>
-            <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <Radio className="w-3 h-3 text-slate-400 dark:text-slate-500" /> Smart Protocol
+            <label className="block text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+              <Radio className="w-3 h-3 text-zinc-400 dark:text-zinc-500" /> Smart Protocol
             </label>
             <select
               value={filters.protocol || 'All Protocols'}
               onChange={(e) => handleProtocolChange(e.target.value)}
-              className="w-full text-xs py-2 px-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 text-slate-800 dark:text-slate-200 shadow-2xs"
+              className="w-full text-xs py-2 px-3 border border-zinc-200 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 text-zinc-800 dark:text-zinc-200 shadow-2xs"
             >
               {PROTOCOLS.map((p) => (
-                <option key={p} value={p} className="dark:bg-slate-800">{p}</option>
+                <option key={p} value={p} className="dark:bg-zinc-800">{p}</option>
               ))}
             </select>
           </div>
 
           {/* Status */}
           <div>
-            <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <Cpu className="w-3 h-3 text-slate-400 dark:text-slate-500" /> Item Status
+            <label className="block text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+              <Cpu className="w-3 h-3 text-zinc-400 dark:text-zinc-500" /> Item Status
             </label>
             <select
               value={filters.status || 'all'}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className="w-full text-xs py-2 px-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 text-slate-800 dark:text-slate-200 shadow-2xs"
+              className="w-full text-xs py-2 px-3 border border-zinc-200 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 text-zinc-800 dark:text-zinc-200 shadow-2xs"
             >
               {STATUSES.map((s) => (
-                <option key={s.id} value={s.id} className="dark:bg-slate-800">{s.label}</option>
+                <option key={s.id} value={s.id} className="dark:bg-zinc-800">{s.label}</option>
               ))}
             </select>
           </div>
@@ -273,19 +273,19 @@ export const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
       )}
 
       {/* Filter Stats & Reset Strip */}
-      <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-2">
+      <div className="mt-3.5 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex flex-wrap items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 gap-2">
         <div className="flex items-center gap-2">
           <span>
-            Showing <strong className="text-slate-900 dark:text-slate-100 font-semibold">{filteredCount}</strong> of{' '}
-            <strong className="text-slate-900 dark:text-slate-100 font-semibold">{totalCount}</strong> items
+            Showing <strong className="text-zinc-900 dark:text-zinc-100 font-semibold">{filteredCount}</strong> of{' '}
+            <strong className="text-zinc-900 dark:text-zinc-100 font-semibold">{totalCount}</strong> items
           </span>
 
-          <label className="inline-flex items-center gap-1.5 ml-3 cursor-pointer text-slate-700 dark:text-slate-300 select-none font-medium">
+          <label className="inline-flex items-center gap-1.5 ml-3 cursor-pointer text-zinc-700 dark:text-zinc-300 select-none font-medium">
             <input
               type="checkbox"
               checked={filters.onlyUnboxed}
               onChange={handleUnboxedToggle}
-              className="rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-indigo-600 focus:ring-indigo-500"
+              className="rounded border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white focus:ring-zinc-950"
             />
             <span>Unboxed / loose items only</span>
           </label>

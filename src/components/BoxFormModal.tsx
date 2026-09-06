@@ -95,21 +95,21 @@ export const BoxFormModal: React.FC<BoxFormModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/80">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-transparent dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-xs">
+            <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 flex items-center justify-center shadow-xs">
               <Box className="w-4 h-4" />
             </div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
               {initialBox ? 'Edit Storage Box' : 'Create Storage Box / Tote'}
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -119,7 +119,7 @@ export const BoxFormModal: React.FC<BoxFormModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1 flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
                 Box Code Identifier *
               </label>
               <input
@@ -127,15 +127,15 @@ export const BoxFormModal: React.FC<BoxFormModalProps> = ({
                 value={boxCode}
                 onChange={(e) => setBoxCode(e.target.value)}
                 placeholder="e.g. BOX-05 or TOTE-A"
-                className={`w-full font-mono font-bold text-xs py-2 px-3 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 ${
-                  errors.boxCode ? 'border-red-400' : 'border-slate-300 dark:border-slate-700'
+                className={`w-full font-mono font-bold text-xs py-2 px-3 border rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 ${
+                  errors.boxCode ? 'border-red-400' : 'border-zinc-300 dark:border-zinc-700'
                 }`}
               />
               {errors.boxCode && <p className="text-[11px] text-red-500 mt-0.5">{errors.boxCode}</p>}
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
                 Barcode Code *
               </label>
               <input
@@ -143,8 +143,8 @@ export const BoxFormModal: React.FC<BoxFormModalProps> = ({
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
                 placeholder="e.g. BOX-005"
-                className={`w-full font-mono text-xs py-2 px-3 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 ${
-                  errors.barcode ? 'border-red-400' : 'border-slate-300 dark:border-slate-700'
+                className={`w-full font-mono text-xs py-2 px-3 border rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 ${
+                  errors.barcode ? 'border-red-400' : 'border-zinc-300 dark:border-zinc-700'
                 }`}
               />
               {errors.barcode && <p className="text-[11px] text-red-500 mt-0.5">{errors.barcode}</p>}
@@ -152,7 +152,7 @@ export const BoxFormModal: React.FC<BoxFormModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
               Box Name / Category Title *
             </label>
             <input
@@ -160,8 +160,8 @@ export const BoxFormModal: React.FC<BoxFormModalProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Spare HDMI Cables, Zigbee Sensors, Test Gear"
-              className={`w-full text-xs py-2 px-3 border rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 ${
-                errors.name ? 'border-red-400' : 'border-slate-300 dark:border-slate-700'
+              className={`w-full text-xs py-2 px-3 border rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 ${
+                errors.name ? 'border-red-400' : 'border-zinc-300 dark:border-zinc-700'
               }`}
             />
             {errors.name && <p className="text-[11px] text-red-500 mt-0.5">{errors.name}</p>}
@@ -169,7 +169,7 @@ export const BoxFormModal: React.FC<BoxFormModalProps> = ({
 
           {/* Color tag */}
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1.5">
               Color Tag Indicator (for quick physical identification)
             </label>
             <div className="flex flex-wrap gap-2">
@@ -179,7 +179,7 @@ export const BoxFormModal: React.FC<BoxFormModalProps> = ({
                   key={preset.hex}
                   onClick={() => setColorTag(preset.hex)}
                   className={`w-7 h-7 rounded-lg transition-transform flex items-center justify-center cursor-pointer ${
-                    colorTag === preset.hex ? 'scale-110 ring-2 ring-slate-900 dark:ring-white ring-offset-2 dark:ring-offset-slate-900' : 'hover:scale-105'
+                    colorTag === preset.hex ? 'scale-110 ring-2 ring-black dark:ring-white ring-offset-2 dark:ring-offset-zinc-900' : 'hover:scale-105'
                   }`}
                   style={{ backgroundColor: preset.hex }}
                   title={preset.name}
@@ -191,13 +191,13 @@ export const BoxFormModal: React.FC<BoxFormModalProps> = ({
           {/* Room & Placement */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
                 Room *
               </label>
               <select
                 value={roomId}
                 onChange={(e) => setRoomId(e.target.value)}
-                className="w-full text-xs py-2 px-3 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                className="w-full text-xs py-2 px-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
               >
                 {rooms.map((r) => (
                   <option key={r.id} value={r.id}>{r.name}</option>
@@ -206,7 +206,7 @@ export const BoxFormModal: React.FC<BoxFormModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+              <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
                 Exact Location / Shelf
               </label>
               <input
@@ -214,13 +214,13 @@ export const BoxFormModal: React.FC<BoxFormModalProps> = ({
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g. Rack A Shelf 2, Top Closet"
-                className="w-full text-xs py-2 px-3 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                className="w-full text-xs py-2 px-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
               Description / Notes
             </label>
             <textarea
@@ -228,22 +228,22 @@ export const BoxFormModal: React.FC<BoxFormModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. Clear plastic bin with latching handles. Keep away from humidity."
-              className="w-full text-xs py-2 px-3 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+              className="w-full text-xs py-2 px-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
             />
           </div>
 
           {/* Submit */}
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
+          <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="px-4 py-2 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs shadow-indigo-500/20 transition-colors cursor-pointer"
+              className="px-5 py-2 bg-black hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
             >
               {initialBox ? 'Update Box' : 'Save Box'}
             </button>

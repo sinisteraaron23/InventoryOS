@@ -628,7 +628,7 @@ export default function App() {
 
   // 3. Authenticated InventoryOS Application View
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans flex flex-col transition-colors">
+    <div className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 font-sans flex flex-col transition-colors">
       {/* Header */}
       <Header
         activeTab={activeTab}
@@ -700,12 +700,12 @@ export default function App() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-12 text-center flex flex-col items-center justify-center max-w-md mx-auto shadow-xs">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-transparent dark:border-indigo-800/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3">
+              <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-12 text-center flex flex-col items-center justify-center max-w-md mx-auto shadow-xs">
+                <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 flex items-center justify-center mb-3">
                   <Search className="w-6 h-6" />
                 </div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">No items match your filters</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">No items match your filters</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                   Try adjusting your search query, clearing category filters, or add a new item.
                 </p>
                 <div className="flex items-center gap-2 mt-5">
@@ -722,13 +722,13 @@ export default function App() {
                         onlyUnboxed: false
                       })
                     }
-                    className="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+                    className="px-4 py-2 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
                   >
                     Reset Filters
                   </button>
                   <button
                     onClick={() => setItemFormState({ isOpen: true, item: null })}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs shadow-indigo-500/20 transition-colors flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-950 text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add New Item
                   </button>
@@ -743,14 +743,14 @@ export default function App() {
           <div>
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Storage Boxes & Bins</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Storage Boxes & Bins</h2>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
                   Physical storage totes with visual barcode labels for fast scanning and tracking
                 </p>
               </div>
               <button
                 onClick={() => setBoxFormState({ isOpen: true, box: null })}
-                className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs shadow-indigo-500/20 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2 bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-950 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Create Storage Box
               </button>
@@ -827,16 +827,16 @@ export default function App() {
 
       {/* Floating Bottom Quick Action Bar on Mobile */}
       <div className="sm:hidden fixed bottom-4 right-4 left-4 z-30 flex items-center justify-center gap-2 pointer-events-none print:hidden">
-        <div className="bg-slate-900 text-white p-1.5 rounded-2xl shadow-xl flex items-center gap-1 pointer-events-auto border border-slate-700">
+        <div className="bg-zinc-950 dark:bg-zinc-900 text-white p-1.5 rounded-2xl shadow-xl flex items-center gap-1 pointer-events-auto border border-zinc-800">
           <button
             onClick={() => setIsScannerOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-white text-slate-900 rounded-xl text-xs font-bold shadow-xs"
+            className="flex items-center gap-1.5 px-3 py-2 bg-white text-zinc-950 rounded-xl text-xs font-bold shadow-xs"
           >
             <Camera className="w-4 h-4" /> Scan
           </button>
           <button
             onClick={() => setItemFormState({ isOpen: true, item: null })}
-            className="flex items-center gap-1.5 px-3 py-2 text-white hover:bg-slate-800 rounded-xl text-xs font-semibold"
+            className="flex items-center gap-1.5 px-3 py-2 text-white hover:bg-zinc-800 rounded-xl text-xs font-semibold"
           >
             <Plus className="w-4 h-4" /> Add Item
           </button>
@@ -848,7 +848,7 @@ export default function App() {
               setInitialPrintTarget(undefined);
               setIsPrinterOpen(true);
             }}
-            className="p-2 text-slate-300 hover:text-white rounded-xl"
+            className="p-2 text-zinc-300 hover:text-white rounded-xl"
             title="Print Barcode Labels"
           >
             <Printer className="w-4 h-4" />

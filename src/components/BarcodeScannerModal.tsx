@@ -227,17 +227,17 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 overflow-y-auto">
+      <div className="relative w-full max-w-xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/70">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-transparent dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-xs">
+            <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 flex items-center justify-center shadow-xs">
               <Camera className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Inventory Barcode Scanner</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Scan Code 128, EAN/UPC, or QR code labels</p>
+              <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Inventory Barcode Scanner</h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Scan Code 128, EAN/UPC, or QR code labels</p>
             </div>
           </div>
           <button
@@ -245,20 +245,20 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
               stopCameraScanner();
               onClose();
             }}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Selection */}
-        <div className="flex border-b border-slate-100 dark:border-slate-800 px-6 bg-white dark:bg-slate-900 gap-2 pt-2">
+        <div className="flex border-b border-zinc-100 dark:border-zinc-800 px-6 bg-white dark:bg-zinc-900 gap-2 pt-2">
           <button
             onClick={() => setActiveTab('camera')}
             className={`flex items-center gap-2 pb-3 px-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
               activeTab === 'camera'
-                ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'border-zinc-950 dark:border-white text-zinc-950 dark:text-white'
+                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
             }`}
           >
             <Camera className="w-4 h-4" />
@@ -268,8 +268,8 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
             onClick={() => setActiveTab('upload')}
             className={`flex items-center gap-2 pb-3 px-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
               activeTab === 'upload'
-                ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'border-zinc-950 dark:border-white text-zinc-950 dark:text-white'
+                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
             }`}
           >
             <Upload className="w-4 h-4" />
@@ -279,8 +279,8 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
             onClick={() => setActiveTab('manual')}
             className={`flex items-center gap-2 pb-3 px-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
               activeTab === 'manual'
-                ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'border-zinc-950 dark:border-white text-zinc-950 dark:text-white'
+                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
             }`}
           >
             <Keyboard className="w-4 h-4" />
@@ -292,7 +292,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-4">
           {activeTab === 'camera' && (
             <div className="flex flex-col items-center">
-              <div className="relative w-full aspect-4/3 max-h-[300px] bg-slate-950 rounded-xl overflow-hidden shadow-inner flex items-center justify-center border border-slate-800">
+              <div className="relative w-full aspect-4/3 max-h-[300px] bg-zinc-950 rounded-xl overflow-hidden shadow-inner flex items-center justify-center border border-zinc-800">
                 <div id={scannerContainerId} className="w-full h-full" />
                 
                 {/* Visual reticle overlay */}
@@ -307,8 +307,8 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                 </div>
 
                 {!isScanning && !cameraError && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-slate-300 text-xs gap-2">
-                    <RefreshCw className="w-6 h-6 animate-spin text-slate-400" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900 text-zinc-300 text-xs gap-2">
+                    <RefreshCw className="w-6 h-6 animate-spin text-zinc-400" />
                     Initializing camera video stream...
                   </div>
                 )}
@@ -330,7 +330,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                 </div>
               )}
 
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 text-center">
                 Point camera at barcode or QR code label. Scanner reads automatically.
               </p>
             </div>
@@ -338,10 +338,10 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
           {activeTab === 'upload' && (
             <div className="flex flex-col items-center gap-4">
-              <label className="w-full border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors text-center">
-                <Upload className="w-10 h-10 text-slate-400 mb-2" />
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Choose photo or drag file here</span>
-                <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">Upload a snapshot of a label, package, or device barcode</span>
+              <label className="w-full border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors text-center">
+                <Upload className="w-10 h-10 text-zinc-400 mb-2" />
+                <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">Choose photo or drag file here</span>
+                <span className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Upload a snapshot of a label, package, or device barcode</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -355,7 +355,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
           {activeTab === 'manual' && (
             <form onSubmit={handleManualSubmit} className="flex flex-col gap-3">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                 Barcode Number or Asset ID
               </label>
               <div className="flex gap-2">
@@ -365,16 +365,16 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                   onChange={(e) => setManualCode(e.target.value)}
                   placeholder="e.g. ITM-10021 or BOX-001"
                   autoFocus
-                  className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-mono text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-zinc-100 font-mono text-sm focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white"
                 />
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2.5 bg-black hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-white rounded-xl text-sm font-medium shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   Lookup <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
                 Supports USB handheld barcode scanner guns, manual keypad entry, or copy-pasted serials.
               </p>
             </form>
@@ -382,11 +382,11 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
           {/* Scanned Result Card */}
           {scannedResult && (
-            <div className="mt-2 border rounded-xl p-4 bg-slate-50/90 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-700">
+            <div className="mt-2 border rounded-xl p-4 bg-zinc-50/90 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-700">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Scanned Value:</span>
-                  <code className="bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-2 py-0.5 rounded text-xs font-mono font-bold">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Scanned Value:</span>
+                  <code className="bg-zinc-200 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 px-2 py-0.5 rounded text-xs font-mono font-bold">
                     {scannedResult.code}
                   </code>
                 </div>
@@ -405,37 +405,37 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
               {scannedResult.item && (
                 <div className="mt-3 flex flex-col gap-2">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-950/60 border border-transparent dark:border-blue-800 text-blue-800 dark:text-blue-300 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 flex items-center justify-center shrink-0">
                       <Package className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                      <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
                         {scannedResult.item.name}
                       </h4>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400">
                         {scannedResult.item.brand} {scannedResult.item.modelNumber && `• ${scannedResult.item.modelNumber}`}
                       </p>
-                      <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                      <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
                         <span className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-slate-400" />
+                          <MapPin className="w-3 h-3 text-zinc-400" />
                           {getRoomName(scannedResult.item.roomId)}
                         </span>
                         <span>•</span>
                         <span className="flex items-center gap-1">
-                          <Box className="w-3 h-3 text-slate-400" />
+                          <Box className="w-3 h-3 text-zinc-400" />
                           {getBoxName(scannedResult.item.boxId)}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-end gap-2">
+                  <div className="mt-2 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/60 flex items-center justify-end gap-2">
                     <button
                       onClick={() => {
                         onSelectItem(scannedResult.item!);
                         onClose();
                       }}
-                      className="px-4 py-2 bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-500 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2 bg-black hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
                     >
                       <FolderOpen className="w-3.5 h-3.5" /> View Item Details
                     </button>
@@ -449,32 +449,32 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                   <div className="flex items-start gap-3">
                     <div 
                       className="w-10 h-10 rounded-lg text-white flex items-center justify-center shrink-0 shadow-xs"
-                      style={{ backgroundColor: scannedResult.box.colorTag || '#3b82f6' }}
+                      style={{ backgroundColor: scannedResult.box.colorTag || '#71717a' }}
                     >
                       <Box className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                        <span className="font-mono text-xs font-bold px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200">
                           {scannedResult.box.boxCode}
                         </span>
-                        <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                        <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
                           {scannedResult.box.name}
                         </h4>
                       </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
                         Location: {getRoomName(scannedResult.box.roomId)} • {scannedResult.box.location}
                       </p>
                     </div>
                   </div>
 
-                  <div className="mt-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-end gap-2">
+                  <div className="mt-2 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/60 flex items-center justify-end gap-2">
                     <button
                       onClick={() => {
                         onSelectBox(scannedResult.box!);
                         onClose();
                       }}
-                      className="px-4 py-2 bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-500 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2 bg-black hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
                     >
                       <FolderOpen className="w-3.5 h-3.5" /> Open Storage Box
                     </button>
@@ -485,8 +485,8 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
               {/* Not found options */}
               {!scannedResult.item && !scannedResult.box && (
                 <div className="mt-3 flex flex-col gap-2">
-                  <p className="text-xs text-slate-600 dark:text-slate-400">
-                    No existing item or box has barcode <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{scannedResult.code}</span>.
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                    No existing item or box has barcode <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{scannedResult.code}</span>.
                     You can register it now:
                   </p>
                   <div className="flex items-center gap-2 pt-1">
@@ -495,7 +495,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                         onCreateItemWithCode(scannedResult.code);
                         onClose();
                       }}
-                      className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="flex-1 py-2 px-3 bg-black hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Package className="w-3.5 h-3.5" /> Add New Item
                     </button>
@@ -504,7 +504,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                         onCreateBoxWithCode(scannedResult.code);
                         onClose();
                       }}
-                      className="flex-1 py-2 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="flex-1 py-2 px-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Box className="w-3.5 h-3.5" /> Create Storage Box
                     </button>
@@ -516,8 +516,8 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
           {/* Recent Scans Strip */}
           {recentScans.length > 0 && (
-            <div className="mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            <div className="mt-auto pt-2 border-t border-zinc-100 dark:border-zinc-800">
+              <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
                 Recent Scans:
               </span>
               <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -525,7 +525,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                   <button
                     key={code}
                     onClick={() => lookupCode(code)}
-                    className="text-xs font-mono bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                    className="text-xs font-mono bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 transition-colors cursor-pointer"
                   >
                     {code}
                   </button>
