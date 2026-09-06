@@ -193,8 +193,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             <Edit2 className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => onDelete(item)}
-            className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(item);
+            }}
+            className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
             title="Delete Item"
           >
             <Trash2 className="w-3.5 h-3.5" />

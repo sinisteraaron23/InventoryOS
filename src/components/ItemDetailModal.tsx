@@ -395,11 +395,9 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
         {/* Footer actions */}
         <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between">
           <button
-            onClick={() => {
-              onDelete(item);
-              onClose();
-            }}
-            className="text-xs font-medium text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+            type="button"
+            onClick={() => onDelete(item)}
+            className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-1.5 px-3.5 py-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-900/60 transition-colors cursor-pointer"
           >
             <Trash2 className="w-4 h-4" /> Delete Item
           </button>

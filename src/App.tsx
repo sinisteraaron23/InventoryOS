@@ -28,7 +28,8 @@ import {
   deleteBoxFromCloud,
   saveRoomToCloud,
   deleteRoomFromCloud,
-  bulkUploadInitialData
+  bulkUploadInitialData,
+  clearAllUserDataFromCloud
 } from './lib/firebase';
 
 import { Header } from './components/Header';
@@ -45,12 +46,30 @@ import { BoxDetailModal } from './components/BoxDetailModal';
 import { ItemFormModal } from './components/ItemFormModal';
 import { BoxFormModal } from './components/BoxFormModal';
 import { RoomFormModal } from './components/RoomFormModal';
+import { ConfirmModal } from './components/ConfirmModal';
 
 export default function App() {
   // Auth state
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  // Dark Mode state
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('inventory_theme');
+    if (saved) return saved === 'dark';
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('inventory_theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('inventory_theme', 'light');
+    }
+  }, [darkMode]);
 
   // Core data states
   const [items, setItems] = useState<InventoryItem[]>(() => {
@@ -110,6 +129,23 @@ export default function App() {
     room?: Room | null;
   }>({ isOpen: false });
 
+  // Confirmation Modal State (replaces blocked window.confirm / alert)
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    subMessage?: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    isDestructive?: boolean;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
+
   // Save to localStorage whenever offline/guest state changes
   useEffect(() => {
     if (!currentUser) {
@@ -126,29 +162,44 @@ export default function App() {
       if (user) {
         setIsSyncing(true);
 
+        // One-time initial cloud upload for brand new account if local items exist
+        const migrationKey = `inventory_migrated_v1_${user.uid}`;
+        const hasMigrated = localStorage.getItem(migrationKey);
+
         // Subscribe to items in real-time
         const unsubItems = subscribeToItems(user.uid, (cloudItems) => {
-          if (cloudItems.length > 0) {
-            setItems(cloudItems);
+          if (!hasMigrated && cloudItems.length === 0) {
+            localStorage.setItem(migrationKey, 'true');
+            // Upload current local state once on first sign in
+            const localSaved = localStorage.getItem('household_inventory_items');
+            if (localSaved) {
+              try {
+                const parsed = JSON.parse(localSaved);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                  bulkUploadInitialData(user.uid, parsed, boxes, rooms).catch(console.warn);
+                }
+              } catch {
+                // Ignore parse errors
+              }
+            }
           } else {
-            // First time login with empty cloud: upload current state
-            bulkUploadInitialData(user.uid, items, boxes, rooms).catch(console.warn);
+            localStorage.setItem(migrationKey, 'true');
+            setItems(cloudItems);
+            localStorage.setItem('household_inventory_items', JSON.stringify(cloudItems));
           }
           setIsSyncing(false);
         });
 
         // Subscribe to boxes in real-time
         const unsubBoxes = subscribeToBoxes(user.uid, (cloudBoxes) => {
-          if (cloudBoxes.length > 0) {
-            setBoxes(cloudBoxes);
-          }
+          setBoxes(cloudBoxes);
+          localStorage.setItem('household_inventory_boxes', JSON.stringify(cloudBoxes));
         });
 
         // Subscribe to rooms in real-time
         const unsubRooms = subscribeToRooms(user.uid, (cloudRooms) => {
-          if (cloudRooms.length > 0) {
-            setRooms(cloudRooms);
-          }
+          setRooms(cloudRooms);
+          localStorage.setItem('household_inventory_rooms', JSON.stringify(cloudRooms));
         });
 
         return () => {
@@ -248,15 +299,39 @@ export default function App() {
   };
 
   const handleDeleteItem = (itemToDelete: InventoryItem) => {
-    if (window.confirm(`Are you sure you want to remove "${itemToDelete.name}"?`)) {
-      setItems((prev) => prev.filter((it) => it.id !== itemToDelete.id));
-      if (detailItem?.id === itemToDelete.id) {
-        setDetailItem(null);
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Item',
+      message: `Are you sure you want to delete "${itemToDelete.name}"?`,
+      subMessage: itemToDelete.barcode ? `Barcode: ${itemToDelete.barcode} • Category: ${itemToDelete.category}` : undefined,
+      confirmLabel: 'Delete Item',
+      isDestructive: true,
+      onConfirm: async () => {
+        // Immediate local state removal
+        setItems((prev) => {
+          const next = prev.filter((it) => it.id !== itemToDelete.id);
+          localStorage.setItem('household_inventory_items', JSON.stringify(next));
+          return next;
+        });
+
+        if (detailItem?.id === itemToDelete.id) {
+          setDetailItem(null);
+        }
+
+        if (itemFormState.isOpen && itemFormState.item?.id === itemToDelete.id) {
+          setItemFormState({ isOpen: false, item: null });
+        }
+
+        if (currentUser) {
+          try {
+            await deleteItemFromCloud(currentUser.uid, itemToDelete.id);
+          } catch (err: unknown) {
+            console.error('Failed to delete item from cloud:', err);
+            setAuthError('Could not delete item from cloud storage.');
+          }
+        }
       }
-      if (currentUser) {
-        deleteItemFromCloud(currentUser.uid, itemToDelete.id).catch(console.warn);
-      }
-    }
+    });
   };
 
   // Box Handlers
@@ -276,28 +351,46 @@ export default function App() {
 
   const handleDeleteBox = (boxToDelete: StorageBox) => {
     const itemsInBox = items.filter((it) => it.boxId === boxToDelete.id);
-    const confirmMsg = itemsInBox.length > 0
-      ? `"${boxToDelete.name}" contains ${itemsInBox.length} items. Deleting the box will move these items to unboxed storage. Proceed?`
-      : `Delete storage box "${boxToDelete.name}"?`;
+    const sub = itemsInBox.length > 0
+      ? `This box contains ${itemsInBox.length} item(s). Deleting the box will move them to unboxed storage.`
+      : undefined;
 
-    if (window.confirm(confirmMsg)) {
-      // Unpack items
-      setItems((prev) =>
-        prev.map((it) => (it.boxId === boxToDelete.id ? { ...it, boxId: null } : it))
-      );
-      setBoxes((prev) => prev.filter((b) => b.id !== boxToDelete.id));
-
-      if (detailBox?.id === boxToDelete.id) {
-        setDetailBox(null);
-      }
-
-      if (currentUser) {
-        deleteBoxFromCloud(currentUser.uid, boxToDelete.id).catch(console.warn);
-        itemsInBox.forEach((it) => {
-          saveItemToCloud(currentUser.uid, { ...it, boxId: null }).catch(console.warn);
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Storage Box',
+      message: `Are you sure you want to delete box "${boxToDelete.name}" (${boxToDelete.boxCode})?`,
+      subMessage: sub,
+      confirmLabel: 'Delete Box',
+      isDestructive: true,
+      onConfirm: async () => {
+        setItems((prev) => {
+          const next = prev.map((it) => (it.boxId === boxToDelete.id ? { ...it, boxId: null } : it));
+          localStorage.setItem('household_inventory_items', JSON.stringify(next));
+          return next;
         });
+
+        setBoxes((prev) => {
+          const next = prev.filter((b) => b.id !== boxToDelete.id);
+          localStorage.setItem('household_inventory_boxes', JSON.stringify(next));
+          return next;
+        });
+
+        if (detailBox?.id === boxToDelete.id) {
+          setDetailBox(null);
+        }
+
+        if (currentUser) {
+          try {
+            await deleteBoxFromCloud(currentUser.uid, boxToDelete.id);
+            itemsInBox.forEach((it) => {
+              saveItemToCloud(currentUser.uid, { ...it, boxId: null }).catch(console.warn);
+            });
+          } catch (err) {
+            console.error('Failed to delete box from cloud:', err);
+          }
+        }
       }
-    }
+    });
   };
 
   const handleRemoveItemFromBox = (item: InventoryItem) => {
@@ -325,16 +418,68 @@ export default function App() {
     const itemsInRoom = items.filter((it) => it.roomId === roomToDelete.id);
 
     if (boxesInRoom.length > 0 || itemsInRoom.length > 0) {
-      alert(`Cannot delete room "${roomToDelete.name}" because it still contains ${boxesInRoom.length} boxes and ${itemsInRoom.length} items. Please relocate them first.`);
+      setConfirmModal({
+        isOpen: true,
+        title: 'Cannot Delete Room',
+        message: `"${roomToDelete.name}" cannot be deleted because it currently contains ${boxesInRoom.length} box(es) and ${itemsInRoom.length} item(s).`,
+        subMessage: 'Please relocate or reassign items and boxes before deleting this room.',
+        confirmLabel: 'Understood',
+        cancelLabel: 'Close',
+        isDestructive: false,
+        onConfirm: () => {}
+      });
       return;
     }
 
-    if (window.confirm(`Delete room "${roomToDelete.name}"?`)) {
-      setRooms((prev) => prev.filter((r) => r.id !== roomToDelete.id));
-      if (currentUser) {
-        deleteRoomFromCloud(currentUser.uid, roomToDelete.id).catch(console.warn);
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Room',
+      message: `Are you sure you want to delete "${roomToDelete.name}"?`,
+      confirmLabel: 'Delete Room',
+      isDestructive: true,
+      onConfirm: async () => {
+        setRooms((prev) => {
+          const next = prev.filter((r) => r.id !== roomToDelete.id);
+          localStorage.setItem('household_inventory_rooms', JSON.stringify(next));
+          return next;
+        });
+
+        if (currentUser) {
+          try {
+            await deleteRoomFromCloud(currentUser.uid, roomToDelete.id);
+          } catch (err) {
+            console.error('Failed to delete room from cloud:', err);
+          }
+        }
       }
-    }
+    });
+  };
+
+  const handleClearUserData = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Clear All Local & Cloud Data',
+      message: 'Are you sure you want to remove all stored items, storage boxes, and custom rooms? This will reset your inventory completely.',
+      subMessage: 'This action cannot be undone.',
+      confirmLabel: 'Clear All Data',
+      isDestructive: true,
+      onConfirm: async () => {
+        setItems([]);
+        setBoxes([]);
+        setRooms([]);
+        localStorage.removeItem('household_inventory_items');
+        localStorage.removeItem('household_inventory_boxes');
+        localStorage.removeItem('household_inventory_rooms');
+
+        if (currentUser) {
+          try {
+            await clearAllUserDataFromCloud(currentUser.uid);
+          } catch (err) {
+            console.error('Failed to clear cloud data:', err);
+          }
+        }
+      }
+    });
   };
 
   // Filtering & Sorting
@@ -431,6 +576,9 @@ export default function App() {
         boxesCount={boxes.length}
         roomsCount={rooms.length}
         isSyncing={isSyncing}
+        darkMode={darkMode}
+        onToggleDarkMode={() => setDarkMode((prev) => !prev)}
+        onClearUserData={handleClearUserData}
       />
 
       {/* Auth Banner message if notice exists */}
@@ -687,6 +835,7 @@ export default function App() {
         isOpen={itemFormState.isOpen}
         onClose={() => setItemFormState({ isOpen: false })}
         onSave={handleSaveItem}
+        onDelete={handleDeleteItem}
         initialItem={itemFormState.item}
         boxes={boxes}
         rooms={rooms}
@@ -710,6 +859,19 @@ export default function App() {
         onClose={() => setRoomFormState({ isOpen: false })}
         onSave={handleSaveRoom}
         initialRoom={roomFormState.room}
+      />
+
+      {/* 8. Confirmation Dialog Modal (Clean in-app confirmation replacing blocked browser prompts) */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        subMessage={confirmModal.subMessage}
+        confirmLabel={confirmModal.confirmLabel}
+        cancelLabel={confirmModal.cancelLabel}
+        isDestructive={confirmModal.isDestructive}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
       />
     </div>
   );

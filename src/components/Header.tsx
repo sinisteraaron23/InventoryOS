@@ -74,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </h1>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block leading-tight mt-0.5">
-                Storage Box Barcode, Room & Electronics Inventory System
+                Home Inventory System
               </p>
             </div>
           </div>

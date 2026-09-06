@@ -27,6 +27,7 @@ interface ItemFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (item: InventoryItem) => void;
+  onDelete?: (item: InventoryItem) => void;
   initialItem?: InventoryItem | null;
   boxes: StorageBox[];
   rooms: Room[];
@@ -64,6 +65,7 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  onDelete,
   initialItem,
   boxes,
   rooms,
@@ -591,20 +593,38 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
           </div>
 
           {/* Footer Submit */}
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs shadow-indigo-500/20 transition-colors cursor-pointer"
-            >
-              {initialItem ? 'Update Item' : 'Save Item'}
-            </button>
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+            <div>
+              {initialItem && onDelete && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDelete(initialItem);
+                    onClose();
+                  }}
+                  className="px-3.5 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete Item
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs shadow-indigo-500/20 transition-colors cursor-pointer"
+              >
+                {initialItem ? 'Update Item' : 'Save Item'}
+              </button>
+            </div>
           </div>
         </form>
       </div>
