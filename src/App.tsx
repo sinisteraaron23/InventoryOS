@@ -48,11 +48,48 @@ import { BoxFormModal } from './components/BoxFormModal';
 import { RoomFormModal } from './components/RoomFormModal';
 import { ConfirmModal } from './components/ConfirmModal';
 
+import { LandingHomePage } from './components/LandingHomePage';
+import { GoogleSignInGate } from './components/GoogleSignInGate';
+
+type PageView = 'home' | 'app';
+
+const getInitialPage = (): PageView => {
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view');
+    if (view === 'app') return 'app';
+    if (view === 'home') return 'home';
+
+    const hash = window.location.hash.toLowerCase();
+    if (hash === '#app') return 'app';
+    if (hash === '#home') return 'home';
+  }
+  return 'home';
+};
+
 export default function App() {
   // Auth state
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  // Top-level Navigation Page View ('home' | 'app')
+  const [currentPage, setCurrentPage] = useState<PageView>(getInitialPage);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPage(getInitialPage());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const handleNavigatePage = (page: PageView) => {
+    setCurrentPage(page);
+    const newUrl = page === 'home' ? window.location.pathname : `?view=${page}`;
+    window.history.pushState(null, '', newUrl);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Dark Mode state
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -564,6 +601,32 @@ export default function App() {
     return result;
   }, [items, filters]);
 
+  // 1. Landing Homepage View
+  if (currentPage === 'home') {
+    return (
+      <LandingHomePage
+        currentUser={currentUser}
+        onNavigateToApp={() => handleNavigatePage('app')}
+        onSignInWithGoogle={handleSignIn}
+        darkMode={darkMode}
+        onToggleDarkMode={() => setDarkMode((prev) => !prev)}
+      />
+    );
+  }
+
+  // 2. Web App Access Gate: Require Google Sign In
+  if (!currentUser) {
+    return (
+      <GoogleSignInGate
+        onSignIn={handleSignIn}
+        onNavigateHome={() => handleNavigatePage('home')}
+        darkMode={darkMode}
+        onToggleDarkMode={() => setDarkMode((prev) => !prev)}
+      />
+    );
+  }
+
+  // 3. Authenticated InventoryOS Application View
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans flex flex-col transition-colors">
       {/* Header */}
@@ -590,6 +653,7 @@ export default function App() {
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode((prev) => !prev)}
         onClearUserData={handleClearUserData}
+        onNavigateHome={() => handleNavigatePage('home')}
       />
 
       {/* Auth Banner message if notice exists */}

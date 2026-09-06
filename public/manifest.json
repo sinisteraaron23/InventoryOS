@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "InventoryOS - Household & Gear Inventory",
+  "short_name": "InventoryOS",
+  "description": "Spatial household & workshop inventory manager with visual barcodes, storage boxes, rooms, and packing slips.",
+  "start_url": "/?view=app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "48x48 72x72 96x96 128x128 192x192 256x256 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

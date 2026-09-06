@@ -36,6 +36,7 @@ interface HeaderProps {
   darkMode: boolean;
   onToggleDarkMode: () => void;
   onClearUserData: () => void;
+  onNavigateHome?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -54,7 +55,8 @@ export const Header: React.FC<HeaderProps> = ({
   isSyncing,
   darkMode,
   onToggleDarkMode,
-  onClearUserData
+  onClearUserData,
+  onNavigateHome,
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
@@ -64,9 +66,22 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-4">
           {/* Brand Logo & Name */}
-          <div className="flex items-center shrink min-w-0">
-            <InventoryOSLogo size="sm" showSubtitle={false} className="sm:hidden" />
-            <InventoryOSLogo size="md" showSubtitle={true} className="hidden sm:flex" />
+          <div className="flex items-center gap-3 shrink min-w-0">
+            {onNavigateHome ? (
+              <button 
+                onClick={onNavigateHome}
+                className="flex items-center shrink min-w-0 hover:opacity-85 transition-opacity cursor-pointer text-left"
+                title="Return to Homepage & Feature Overview"
+              >
+                <InventoryOSLogo size="sm" showSubtitle={false} className="sm:hidden" />
+                <InventoryOSLogo size="md" showSubtitle={true} className="hidden sm:flex" />
+              </button>
+            ) : (
+              <div className="flex items-center shrink min-w-0">
+                <InventoryOSLogo size="sm" showSubtitle={false} className="sm:hidden" />
+                <InventoryOSLogo size="md" showSubtitle={true} className="hidden sm:flex" />
+              </div>
+            )}
           </div>
 
           {/* Actions: Scan, Print, Dark Mode, and Auth Account */}
@@ -139,6 +154,20 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
 
                     <div className="pt-1 flex flex-col gap-0.5">
+                      {onNavigateHome && (
+                        <button
+                          onClick={() => {
+                            setShowUserDropdown(false);
+                            onNavigateHome();
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors font-medium text-left"
+                        >
+                          <Home className="w-3.5 h-3.5 shrink-0 text-zinc-500" /> Homepage & Feature Overview
+                        </button>
+                      )}
+
+                      <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" />
+
                       <button
                         onClick={() => {
                           setShowUserDropdown(false);
