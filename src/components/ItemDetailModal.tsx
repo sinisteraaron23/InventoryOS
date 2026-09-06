@@ -18,13 +18,11 @@ import {
   Plus,
   Minus,
   Image as ImageIcon,
-  Search,
-  Bluetooth
+  Search
 } from 'lucide-react';
 import type { InventoryItem, StorageBox, Room } from '../types';
 import { BarcodeRenderer } from './BarcodeRenderer';
 import { GoogleImageSearchModal } from './GoogleImageSearchModal';
-import { BluetoothPTouchModal } from './BluetoothPTouchModal';
 
 interface ItemDetailModalProps {
   item: InventoryItem | null;
@@ -54,7 +52,6 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
   const [targetBoxId, setTargetBoxId] = useState<string>('');
   const [targetRoomId, setTargetRoomId] = useState<string>('');
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
-  const [isBluetoothOpen, setIsBluetoothOpen] = useState(false);
 
   if (!isOpen || !item) return null;
 
@@ -197,18 +194,10 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
                   {copiedBarcode ? 'Copied' : 'Copy'}
                 </button>
                 <button
-                  type="button"
-                  onClick={() => setIsBluetoothOpen(true)}
-                  title="Print directly to Brother P-Touch via Bluetooth"
-                  className="inline-flex items-center gap-1 text-xs text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/70 border border-sky-200 dark:border-sky-800 hover:bg-sky-100 dark:hover:bg-sky-900/60 px-2.5 py-1 rounded-md shadow-2xs transition-colors cursor-pointer"
-                >
-                  <Bluetooth className="w-3 h-3 text-sky-600 dark:text-sky-400" /> Bluetooth P-Touch
-                </button>
-                <button
                   onClick={() => onPrintBarcode(item)}
-                  className="inline-flex items-center gap-1 text-xs text-white bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 px-2.5 py-1 rounded-md shadow-2xs transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 text-xs text-white bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 px-3 py-1.5 rounded-lg shadow-2xs transition-colors cursor-pointer font-medium"
                 >
-                  <Printer className="w-3 h-3" /> Print Label
+                  <Printer className="w-3.5 h-3.5" /> Print Label
                 </button>
               </div>
             </div>
@@ -473,17 +462,6 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
         itemBrand={item.brand}
         itemModel={item.modelNumber}
         initialQuery={[item.brand, item.modelNumber, item.name].filter(Boolean).join(' ')}
-      />
-
-      {/* Bluetooth P-Touch Wireless Printing Modal */}
-      <BluetoothPTouchModal
-        isOpen={isBluetoothOpen}
-        onClose={() => setIsBluetoothOpen(false)}
-        item={item}
-        box={currentBox || null}
-        rooms={rooms}
-        boxes={boxes}
-        defaultTapeWidth={12}
       />
     </div>
   );
