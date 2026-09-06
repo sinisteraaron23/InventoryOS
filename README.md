@@ -136,20 +136,6 @@
 
 ---
 
-## Printing Barcode Labels
-
-### Brother P-Touch Cube (PT-P300BT / PT-P710BT)
-1. Click **Print Labels** in the header or on any item/box card.
-2. Select **Brother P-Touch (12mm Tape)** or **(9mm Tape)** in the format selector.
-3. Click **Print Labels**.
-4. In your browser print dialog:
-   - Destination: Select your Brother P-Touch printer.
-   - Paper Size: Set to `12mm` (or `9mm`) continuous tape.
-   - Margins: Set to **None**.
-   - Scale: Set to **100%**.
-
----
-
 ## Build & Production Deployment
 
 To create an optimized production build:

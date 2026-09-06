@@ -104,12 +104,6 @@ export const LandingHomePage: React.FC<LandingHomePageProps> = ({
       <section className="relative overflow-hidden pt-12 pb-16 md:pt-20 md:pb-24 border-b border-zinc-200 dark:border-zinc-800 bg-linear-to-b from-white via-zinc-50 to-zinc-100/60 dark:from-zinc-900 dark:via-zinc-950 dark:to-zinc-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto">
-            {/* Top Pill */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-6">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Spatial Household, Workshop & Gear Management</span>
-            </div>
-
             {/* Main Headline */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-zinc-900 dark:text-white leading-[1.12]">
               Never lose track of what's inside a box again.
@@ -144,123 +138,6 @@ export const LandingHomePage: React.FC<LandingHomePageProps> = ({
               <span className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5" /> Mobile Responsive</span>
               <span className="flex items-center gap-1.5"><Cloud className="w-3.5 h-3.5" /> Google Cloud Sync</span>
               <span className="flex items-center gap-1.5"><QrCode className="w-3.5 h-3.5" /> Instant Barcodes</span>
-            </div>
-          </div>
-
-          {/* Interactive Visual Hero Demonstration Grid */}
-          <div className="mt-14 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* Demonstration Card 1: Storage Box Placard */}
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-900 dark:text-zinc-100">
-                      <Box className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">BOX-01: Network Gear</div>
-                      <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Home Office • Shelf A</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-bold">Code128</span>
-                </div>
-
-                {/* Barcode Mockup */}
-                <div className="bg-zinc-50 dark:bg-zinc-800/80 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 flex flex-col items-center justify-center gap-1">
-                  <div className="flex items-center gap-1 tracking-widest font-mono text-xl text-zinc-900 dark:text-zinc-100">
-                    |||||||| | |||| | |||||
-                  </div>
-                  <span className="text-[10px] font-mono font-bold text-zinc-500 dark:text-zinc-400">BOX-001</span>
-                </div>
-
-                <div className="mt-4 space-y-1.5">
-                  <div className="text-[11px] text-zinc-600 dark:text-zinc-400 flex items-center justify-between">
-                    <span>Ubiquiti UniFi U6 Pro AP</span>
-                    <span className="font-mono font-semibold text-zinc-900 dark:text-zinc-100">$159</span>
-                  </div>
-                  <div className="text-[11px] text-zinc-600 dark:text-zinc-400 flex items-center justify-between">
-                    <span>Cat6 Patch Cable 10-Pack</span>
-                    <span className="font-mono font-semibold text-zinc-900 dark:text-zinc-100">$24</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-[11px]">
-                <span className="text-zinc-500 dark:text-zinc-400">2 Items Packed</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100">Placard Ready</span>
-              </div>
-            </div>
-
-            {/* Demonstration Card 2: Packing Slip Manifest */}
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-900 dark:text-zinc-100">
-                      <Home className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Living Room Manifest</div>
-                      <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Floor 1 • 2 Boxes, 4 Items</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-bold">Print Manifest</span>
-                </div>
-
-                {/* Packing Slip Simulation */}
-                <div className="bg-zinc-50 dark:bg-zinc-800/80 p-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-xs space-y-2">
-                  <div className="flex items-center gap-2 text-zinc-800 dark:text-zinc-200">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    <span className="truncate">BOX-02: Audio & Home Theater</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-zinc-800 dark:text-zinc-200">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    <span className="truncate">Apple TV 4K 128GB Wi-Fi</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
-                    <div className="w-3.5 h-3.5 border-2 border-zinc-300 dark:border-zinc-600 rounded shrink-0" />
-                    <span className="truncate">Sonos Era 100 Stand (Loose)</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-[11px]">
-                <span className="text-zinc-500 dark:text-zinc-400">Moving & Relocation</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100">Avery / Letter Sheet</span>
-              </div>
-            </div>
-
-            {/* Demonstration Card 3: Live Scanner HUD */}
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-900 dark:text-zinc-100">
-                      <Camera className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Scanner Engine</div>
-                      <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Camera & USB Laser Gun</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold">Active</span>
-                </div>
-
-                {/* Scanner Target viewfinder HUD */}
-                <div className="relative bg-zinc-950 p-4 rounded-2xl border border-zinc-800 text-center overflow-hidden">
-                  <div className="absolute inset-0 bg-emerald-500/10 animate-pulse pointer-events-none" />
-                  <div className="relative z-10 flex flex-col items-center justify-center py-2">
-                    <QrCode className="w-10 h-10 text-emerald-400 mb-1" />
-                    <span className="text-[11px] font-mono text-emerald-300 font-bold">SCANNED: BOX-03</span>
-                    <span className="text-[10px] text-zinc-400">Matched in 42ms</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-[11px]">
-                <span className="text-zinc-500 dark:text-zinc-400">Zero Configuration</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100">Instant Navigation</span>
-              </div>
             </div>
           </div>
         </div>
