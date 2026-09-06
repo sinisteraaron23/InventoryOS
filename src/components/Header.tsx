@@ -17,6 +17,7 @@ import {
   User as UserIcon
 } from 'lucide-react';
 import type { User } from 'firebase/auth';
+import { InventoryOSLogo } from './InventoryOSLogo';
 
 interface HeaderProps {
   activeTab: 'items' | 'boxes' | 'rooms' | 'stats';
@@ -63,20 +64,8 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
           {/* Brand Logo & Name */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-600/30 text-white">
-              <Package className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-none">
-                  Inventory<span className="text-indigo-600 dark:text-indigo-400">OS</span>
-                </h1>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block leading-tight mt-0.5">
-                Home Inventory System
-              </p>
-            </div>
+          <div className="flex items-center shrink-0">
+            <InventoryOSLogo size="md" />
           </div>
 
           {/* Actions: Scan, Print, Dark Mode, and Auth Account */}
